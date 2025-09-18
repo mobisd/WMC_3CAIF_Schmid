@@ -1,0 +1,410 @@
+/* Light theme stylesheet - refined (restored) */
+
+:root {
+  --bg: #eef6ff; /* soft blue tint */
+  --bg-secondary: #ffffff;
+  --text: #0b2136; /* deep navy for contrast */
+  --muted: #42566b;
+  --accent: #1e63ff; /* primary blue */
+  --accent-light: #63a8ff;
+  --border: rgba(6, 24, 45, 0.06);
+  --shadow: rgba(14, 34, 66, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter",
+    Arial, sans-serif;
+  line-height: 1.6;
+}
+
+h1 {
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  background: linear-gradient(135deg, var(--text), var(--accent-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+h2 {
+  font-size: clamp(1.2rem, 3vw, 1.9rem);
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+}
+
+/* Header / hero */
+.hero {
+  display: flex;
+  gap: clamp(12px, 4vw, 28px);
+  align-items: center;
+  padding: clamp(18px, 4vw, 36px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 0.9)
+  );
+  backdrop-filter: blur(6px);
+  z-index: 100;
+}
+.hero-img {
+  width: clamp(64px, 14vw, 96px);
+  height: clamp(64px, 14vw, 96px);
+  object-fit: cover;
+  border-radius: 16px;
+  border: 2px solid rgba(30, 99, 255, 0.12);
+  box-shadow: 0 10px 25px var(--shadow);
+}
+.hero-text p {
+  color: var(--muted);
+  margin: 0.3em 0 0;
+  font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+  max-width: 56ch;
+}
+
+.bio {
+  padding: clamp(18px, 4vw, 36px);
+  max-width: 1200px;
+  margin: 2rem auto;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(245, 250, 255, 0.95)
+  );
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 22px var(--shadow);
+}
+.bio p {
+  max-width: 70ch;
+  color: var(--text);
+  font-size: clamp(1rem, 2.5vw, 1.12rem);
+  text-align: justify;
+}
+
+.filmography {
+  padding: clamp(18px, 4vw, 36px);
+  max-width: 900px;
+  margin: 0 auto;
+}
+.filmography h2 {
+  text-align: center;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  padding: 20px 0;
+  position: relative;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 5px;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 99, 255, 0.9),
+    rgba(99, 168, 255, 0.6)
+  );
+  transform: translateX(-50%);
+  z-index: 1;
+  border-radius: 6px;
+  box-shadow: 0 0 30px rgba(30, 99, 255, 0.12);
+}
+.timeline-item {
+  width: 100%;
+  max-width: 520px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.96),
+    rgba(245, 250, 255, 0.96)
+  );
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  z-index: 2;
+}
+.timeline-item:nth-child(odd) {
+  align-self: flex-start;
+  margin-right: 72px;
+}
+.timeline-item:nth-child(even) {
+  align-self: flex-end;
+  margin-left: 72px;
+}
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(-50% - 10px);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(30, 99, 255, 0.18),
+    var(--accent)
+  );
+  border: 4px solid var(--bg);
+  transform: translateY(-50%);
+  z-index: 4;
+}
+.timeline-item:nth-child(even)::before {
+  left: calc(-50% - 10px);
+  right: auto;
+}
+.year {
+  position: absolute;
+  top: -18px;
+  display: inline-block;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  z-index: 6;
+}
+
+.poster {
+  width: 100%;
+  height: clamp(220px, 30vw, 340px);
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 20px 0 12px;
+  box-shadow: 0 8px 18px rgba(10, 30, 60, 0.06);
+}
+.poster-large {
+  height: clamp(320px, 40vw, 460px) !important;
+}
+
+.trailer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-top: 12px;
+}
+.trailer iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.filmography-overview {
+  max-width: 1100px;
+  margin: 2.5rem auto;
+  padding: 20px;
+}
+.films-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98),
+    rgba(245, 250, 255, 0.98)
+  );
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(14, 34, 66, 0.06);
+}
+.films-table caption {
+  caption-side: top;
+  padding: 16px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+  font-size: 1.05rem;
+}
+.films-table thead th {
+  text-align: left;
+  padding: 12px 16px;
+  background: rgba(30, 99, 255, 0.06);
+  color: var(--accent);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.films-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(6, 24, 45, 0.04);
+  color: var(--text);
+}
+.films-table tbody tr:nth-child(even) td {
+  background: rgba(30, 99, 255, 0.03);
+}
+.films-table a {
+  color: var(--accent-light);
+  text-decoration: underline;
+}
+
+/* Footer (light) — mirror dark layout but in light tones */
+.footer {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+  margin-top: 3rem;
+}
+.footer p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.feedback {
+  max-width: 840px;
+  margin: 2.5rem auto 4rem;
+  padding: 20px;
+}
+.feedback-form {
+  display: grid;
+  gap: 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98),
+    rgba(245, 250, 255, 0.98)
+  );
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(6, 24, 45, 0.06);
+  box-shadow: 0 10px 30px rgba(14, 34, 66, 0.06);
+}
+
+.feedback-form .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feedback-form label {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.feedback-form input[type="text"],
+.feedback-form input[type="email"],
+.feedback-form select,
+.feedback-form textarea {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(6, 24, 45, 0.08);
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease,
+    transform 0.06s ease;
+}
+
+.feedback-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.feedback-form input:focus,
+.feedback-form textarea:focus,
+.feedback-form select:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(30, 99, 255, 0.12);
+  border-color: var(--accent);
+}
+
+.feedback-form fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.feedback-form legend {
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.feedback-form .form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+  margin-top: 6px;
+}
+.feedback-form button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(30, 99, 255, 0.12);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.feedback-form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(30, 99, 255, 0.14);
+}
+.feedback-form button[type="reset"] {
+  background: transparent;
+  border: 1px solid rgba(6, 24, 45, 0.06);
+  color: var(--text);
+  box-shadow: none;
+}
+
+.feedback-form input[type="checkbox"] {
+  transform: scale(1.03);
+}
+.feedback-form label > input {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+  .timeline::before {
+    left: 28px;
+    transform: none;
+    width: 3px;
+  }
+  .timeline-item {
+    margin: 0 !important;
+    max-width: calc(100% - 72px);
+    align-self: flex-start !important;
+  }
+  .timeline-item:nth-child(odd)::before,
+  .timeline-item:nth-child(even)::before {
+    left: -40px !important;
+    right: auto !important;
+  }
+  .timeline-item::after,
+  .timeline-item .year {
+    left: -20px !important;
+    right: auto !important;
+  }
+}
+
+@keyframes flow {
+  0% {
+    background-position: 50% 0%;
+  }
+  50% {
+    background-position: 50% 60%;
+  }
+  100% {
+    background-position: 50% 100%;
+  }
+}
