@@ -1,3 +1,10 @@
-## Das <datalist>-Element gibt einem Eingabefeld Autovervollständigung, ganz ohne JavaScript. Man definiert eigene Vorschläge mit <option>, die dann als Dropdown erscheinen, aber die Nutzer können trotzdem frei tippen. Das macht Formulare einfacher und benutzerfreundlicher.
+## Mit <video> kann man direkt Videos in eine Webseite einfügen, ohne externe Player.“
 
-https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/datalist
+<video controls width="320">
+  <source src="beispiel.mp4" type="video/mp4">
+  Dein Browser unterstützt das Video-Tag nicht.
+</video>
+
+## Damit wird ein Video mit Play/Pause-Button eingebettet.
+
+https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/video
