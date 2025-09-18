@@ -1,11 +1,9 @@
-/* Light theme stylesheet - refined (restored) */
-
 :root {
-  --bg: #eef6ff; /* soft blue tint */
+  --bg: #eef6ff;
   --bg-secondary: #ffffff;
-  --text: #0b2136; /* deep navy for contrast */
+  --text: #0b2136;
   --muted: #42566b;
-  --accent: #1e63ff; /* primary blue */
+  --accent: #1e63ff;
   --accent-light: #63a8ff;
   --border: rgba(6, 24, 45, 0.06);
   --shadow: rgba(14, 34, 66, 0.08);
@@ -40,7 +38,6 @@ h2 {
   margin-bottom: 0.6rem;
 }
 
-/* Header / hero */
 .hero {
   display: flex;
   gap: clamp(12px, 4vw, 28px);
@@ -147,7 +144,7 @@ h2 {
   align-self: flex-end;
   margin-left: 72px;
 }
-.timeline-item::before {
+.timeline-item {
   content: "";
   position: absolute;
   top: 50%;
@@ -256,7 +253,6 @@ h2 {
   text-decoration: underline;
 }
 
-/* Footer (light) — mirror dark layout but in light tones */
 .footer {
   padding: 40px 20px;
   text-align: center;
