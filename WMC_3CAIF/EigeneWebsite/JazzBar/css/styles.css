@@ -1,6 +1,4 @@
-/* Custom Styles for The Lighthouse */
-
-/* Import Jazzy Fonts: Limelight (Art Deco headers) and Josefin Sans (Geometric body) */
+/* custom font weil anderen sehen kacki aus */
 @import url("https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Limelight&display=swap");
 
 :root {
@@ -14,7 +12,7 @@ body {
   scrollbar-color: var(--gold-primary) var(--brown-dark);
 }
 
-/* Scrollbar styling for Webkit */
+/* scrollbar type shi*/
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -28,7 +26,6 @@ body {
   border-radius: 4px;
 }
 
-/* Custom Animation needing Keyframes */
 @keyframes fadeInSlideUp {
   from {
     opacity: 0;
@@ -44,7 +41,7 @@ body {
   animation: fadeInSlideUp 1s ease-out forwards;
 }
 
-/* Nested CSS usage (Native CSS Nesting) */
+/* ai gefragt */
 .nav-link {
   position: relative;
   color: #e5e5e5;
@@ -70,14 +67,14 @@ body {
   }
 }
 
-/* Table Styling Override */
+/* tabelle und so */
 .jazz-table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
 
   th {
-    font-family: "Limelight", cursive; /* Jazzy Font */
+    font-family: "Limelight", cursive;
     background-color: rgba(212, 175, 55, 0.1);
     color: var(--gold-primary);
     text-transform: uppercase;
@@ -100,89 +97,58 @@ body {
   }
 }
 
-/* 
-   Navbar Scroll / Collapse Logic 
-   ------------------------------
-*/
-
-/* 
-   "Heavenly" Smooth Transition Settings 
-   Uses Expo ease for a premium, heavy feel.
-*/
-
-/* Container Logic */
+/* navbar kollapsieren (sehr viel googlen und gpt) */
 nav {
-  /* Ensure no wrapping during shrink */
   white-space: nowrap;
   overflow: hidden;
-  /* Maintain flex layout consistently */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* Initial large max-width for expanded state (Tailwind overrides this but good to have base) */
   width: 100%;
 
-  /* The "Heavenly" Transition: 
-       Long duration (0.8s), Expo ease for snappy start and very slow settle.
-       Animating padding and max-width in sync.
-    */
   transition: max-width 1s cubic-bezier(0.16, 1, 0.3, 1),
     padding 1s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s ease;
 }
 
-/* Ensure Logo never shrinks */
 nav > a:first-child {
   flex-shrink: 0;
-  margin-right: auto; /* Pushes content right, keeps logo left */
+  margin-right: auto;
 }
 
 /* Base transition for the nav contents (Links/Burger) */
 nav ul,
 nav #burgerBtn {
-  /* Transition opacity faster than width so they fade out before the container fully shrinks */
   transition: opacity 0.4s ease-out,
     max-width 0.8s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), margin 0.8s ease;
 
   opacity: 1;
-  max-width: 800px; /* Full width allowed */
+  max-width: 800px;
   transform: translateX(0);
 }
 
-/* 
-   COLLAPSED STATE 
-   (Active when scrolled down) 
-*/
 nav.nav-collapsed {
-  /* Shrink to EXACTLY the logo width + padding */
   max-width: 290px;
 
-  /* Slightly reduce padding for a tighter pill shape */
   padding-left: 1.5rem;
   padding-right: 1.5rem;
-
-  /* CRITICAL: Do NOT change justify-content. 
-       We rely on max-width clamping to visually center the logo.
-    */
 }
 
 nav.nav-collapsed ul,
 nav.nav-collapsed #burgerBtn {
   opacity: 0;
-  max-width: 0; /* Collapse space */
-  margin: 0; /* Remove margin */
+  max-width: 0;
+  margin: 0;
   pointer-events: none;
 
-  /* Slight slide to right for "move away" effect */
   transform: translateX(20px);
 }
 
 /* 
-   EXPANDED STATE 
-   (Active when Hovered over a collapsed nav) 
+   navbar geht auf weil maus so drüber und so
 */
 nav.nav-expanded {
-  max-width: 64rem; /* Return to full width */
+  max-width: 64rem;
   padding-left: 2rem;
   padding-right: 2rem;
 }
@@ -194,6 +160,5 @@ nav.nav-expanded #burgerBtn {
   transform: translateX(0);
   pointer-events: auto;
 
-  /* Delay opacity slightly to let width expand first */
   transition-delay: 0.1s;
 }

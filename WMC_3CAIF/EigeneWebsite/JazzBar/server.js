@@ -7,12 +7,11 @@ const path = require("path");
 const app = express();
 const port = 3000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "."))); // Serve static files from root
+app.use(express.static(path.join(__dirname, ".")));
 
-// Database Setup
+// dartenbarnk
 const db = new sqlite3.Database("lighthouse.db", (err) => {
   if (err) {
     console.error("Error opening database", err.message);
@@ -38,12 +37,12 @@ const db = new sqlite3.Database("lighthouse.db", (err) => {
   }
 });
 
-// CONSTANTS
+// seats
 const TOTAL_SEATS = 40;
 
-// API Endpoints
+// shit das alles geht
 
-// Get seats left for a specific date (IGNORES TIME SLOT FOR TOTAL CALCULATION)
+// übrige sitzplötze getten
 app.get("/api/availability", (req, res) => {
   const { date } = req.query;
 
@@ -51,7 +50,7 @@ app.get("/api/availability", (req, res) => {
     return res.status(400).json({ error: "Date is required" });
   }
 
-  // Changed: Sum guests for the whole day, regardless of time
+  // gäste zählen für den ganzen tag lmao
   const sql = `SELECT SUM(guests) as booked_seats FROM bookings WHERE date = ?`;
 
   db.get(sql, [date], (err, row) => {
@@ -64,7 +63,7 @@ app.get("/api/availability", (req, res) => {
   });
 });
 
-// Create a new booking
+// neue reservierte vierung
 app.post("/api/book", (req, res) => {
   const { name, email, date, time, guests, request } = req.body;
 
@@ -74,7 +73,7 @@ app.post("/api/book", (req, res) => {
 
   const guestCount = parseInt(guests, 10);
 
-  // Check availability first (Total seats for the DAY)
+  // mussi kucki ob platz wenn nicht dann schadi
   const sqlCheck = `SELECT SUM(guests) as booked_seats FROM bookings WHERE date = ?`;
 
   db.get(sqlCheck, [date], (err, row) => {
@@ -88,7 +87,7 @@ app.post("/api/book", (req, res) => {
         .json({ error: "Not enough seats available for this date" });
     }
 
-    // Insert booking
+    // reservierung in datenbank rein (IN DICH REIN)
     const sqlInsert = `INSERT INTO bookings (name, email, date, time, guests, request) VALUES (?, ?, ?, ?, ?, ?)`;
     db.run(
       sqlInsert,
@@ -107,7 +106,6 @@ app.post("/api/book", (req, res) => {
   });
 });
 
-// Start Server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });

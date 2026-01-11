@@ -1,30 +1,29 @@
 document.addEventListener("DOMContentLoaded", () => {
   // --- Navbar Logic ---
   const nav = document.querySelector("nav");
-  const navLinks = document.querySelector("nav ul"); // Desktop links
+  const navLinks = document.querySelector("nav ul");
   const burgerBtn = document.getElementById("burgerBtn");
   const mobileMenu = document.getElementById("mobileMenu");
   let isHovering = false;
 
-  // Scroll Detection
+  // when scrolling dann collapsieren
   window.addEventListener("scroll", () => {
     if (window.scrollY > 50) {
-      // Only collapse if we are NOT hovering
+      // nav collapgsiert wenn wir nicht hovern
       if (!isHovering && !mobileMenu.classList.contains("flex")) {
         nav.classList.add("nav-collapsed");
         nav.classList.remove("nav-expanded");
       }
     } else {
-      // At top, always expanded
+      // oben immer expaneded halt
       nav.classList.remove("nav-collapsed");
       nav.classList.remove("nav-expanded");
     }
   });
 
-  // Hover Logic for Desktop
   const logo = nav.querySelector("a:first-child");
 
-  // Expand when hovering over the collapsed nav (or specifically the logo area)
+  // exapnd when halt hover
   nav.addEventListener("mouseenter", () => {
     isHovering = true;
     if (window.scrollY > 50) {
@@ -41,7 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Mobile Menu Toggle
   if (burgerBtn) {
     burgerBtn.addEventListener("click", () => {
       mobileMenu.classList.toggle("hidden");
@@ -49,17 +47,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Audio Logic with Persistence ---
+  // audio
   const audio = document.getElementById("backgroundJazz");
   const musicBtn = document.getElementById("musicToggle");
   const musicIcon = musicBtn.querySelector("svg");
 
-  // Keys for localStorage
   const STORAGE_KEY_MUTED = "theLighthouse_isMuted";
   const STORAGE_KEY_TIME = "theLighthouse_currentTime";
   const STORAGE_KEY_TIMESTAMP = "theLighthouse_timestamp";
 
-  // Icons
+  // icon die wir brauchen
   const speakerIcon = `
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
     `;
@@ -68,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
     `;
 
-  // --- Promo Video Logic ---
+  // video
   const promoVideo = document.getElementById("promoVideo");
   const promoBtn = document.getElementById("promoMuteBtn");
 
@@ -85,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Ensure it plays
+    // checkt ob video läuft
     promoVideo
       .play()
       .catch((e) => console.log("Promo video autoplay blocked", e));
@@ -96,27 +93,25 @@ document.addEventListener("DOMContentLoaded", () => {
   let savedTime = parseFloat(localStorage.getItem(STORAGE_KEY_TIME));
   let savedTimestamp = parseInt(localStorage.getItem(STORAGE_KEY_TIMESTAMP));
 
-  // Calculate elapsed time if moving between pages
-  // (Optional: simply resuming from savedTime is often enough, but adding elapsed time makes it feel like a continuous stream)
+  // checkt vergangene zeit auf der seite
   if (!isNaN(savedTime) && !isNaN(savedTimestamp)) {
-    // Just resume from saved time for simplicity to avoid running past duration
     audio.currentTime = savedTime;
   }
 
-  // Create Label for Mute Button
+  // mute button label
   const musicLabel = document.createElement("span");
   musicLabel.className =
     "absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap bg-brown-dark/80 text-gold px-3 py-1 rounded-md text-xs uppercase tracking-widest opacity-100 transition-opacity duration-1000 pointer-events-none";
   musicLabel.innerText = "Sound";
   musicBtn.parentElement.appendChild(musicLabel);
 
-  // Fade out label after 5 seconds
+  // fade out label
   setTimeout(() => {
     musicLabel.classList.remove("opacity-100");
     musicLabel.classList.add("opacity-0");
   }, 5000);
 
-  // Show label on hover
+  // label zeigen on hover
   musicBtn.parentElement.classList.add("group");
   musicBtn.addEventListener("mouseenter", () => {
     musicLabel.classList.remove("opacity-0");
@@ -127,28 +122,27 @@ document.addEventListener("DOMContentLoaded", () => {
     musicLabel.classList.add("opacity-0");
   });
 
-  // Apply Volume & Mute State
+  // volume auf 1%
   audio.volume = 0.01;
   audio.muted = isMuted;
   updateIcon();
 
-  // 2. Robust Autoplay Attempt
+  // audio autopay nen try geben
   const playAudio = async () => {
     try {
       await audio.play();
       console.log("Audio playing successfully");
     } catch (err) {
       console.log("Autoplay blocked. Fallback to Muted Autoplay.");
-      // Fallback: Mute and play
+      // wenns nicht geht spielst aber is muted
       audio.muted = true;
       isMuted = true;
       updateIcon();
 
-      // Notify user they need to unmute
+      // label "click to unmute"
       musicLabel.innerText = "Click to Unmute";
       musicLabel.classList.remove("opacity-0");
       musicLabel.classList.add("opacity-100");
-      // Hide again after a delay
       setTimeout(() => {
         musicLabel.innerText = "Sound";
         musicLabel.classList.remove("opacity-100");
@@ -166,17 +160,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   playAudio();
 
-  // 3. Toggle Button Handler
+  // mute button handler
   musicBtn.addEventListener("click", () => {
     if (audio.muted) {
-      // Unmute
+      // unmute
       audio.muted = false;
-      // Ensure it's playing (in case autoplay was blocked)
+      // checkt obs läuft
       if (audio.paused) {
         audio.play();
       }
     } else {
-      // Mute
+      // mute
       audio.muted = true;
     }
 
@@ -185,14 +179,12 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem(STORAGE_KEY_MUTED, isMuted);
   });
 
-  // 4. Save Time on Unload
+  // zeit speichern on unload
   window.addEventListener("beforeunload", () => {
     localStorage.setItem(STORAGE_KEY_TIME, audio.currentTime);
     localStorage.setItem(STORAGE_KEY_TIMESTAMP, Date.now());
   });
 
-  // Helper to update UI
-  // Helper to update UI
   function updateIcon() {
     if (isMuted) {
       musicIcon.innerHTML = muteIcon;

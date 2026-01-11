@@ -42,7 +42,7 @@
   <body
     class="bg-pattern text-gray-200 font-sans antialiased overflow-x-hidden"
   >
-    <!-- Audio Player -->
+    <!-- wie gesagt audio type -->
     <div class="fixed bottom-5 right-5 z-50">
       <button
         id="musicToggle"
@@ -59,16 +59,23 @@
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+            d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
           />
         </svg>
       </button>
+
       <audio id="backgroundJazz" loop>
         <source src="assets/jazz.mp3" type="audio/mpeg" />
       </audio>
     </div>
 
-    <!-- Floating Navigation -->
+    <!-- floating nav -->
     <div class="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
       <nav
         class="w-full max-w-5xl bg-brown-dark/90 backdrop-blur-md border border-gold/30 shadow-2xl rounded-full px-8 py-4 flex justify-between items-center transition-all duration-300 relative"
@@ -133,7 +140,7 @@
           </svg>
         </button>
 
-        <!-- Mobile Menu Dropdown -->
+        <!-- mobiles menu -->
         <div
           id="mobileMenu"
           class="absolute top-full left-0 right-0 mt-4 bg-brown-dark/95 backdrop-blur-xl border border-gold/20 rounded-2xl p-6 hidden flex-col space-y-4 shadow-2xl md:hidden"
@@ -165,7 +172,6 @@
       </nav>
     </div>
 
-    <!-- Hero Section -->
     <header
       class="relative h-[85vh] flex items-center justify-center overflow-hidden"
     >
@@ -201,9 +207,7 @@
       </div>
     </header>
 
-    <!-- Main Content -->
     <main class="container mx-auto px-6 py-16">
-      <!-- About Us -->
       <article
         class="max-w-4xl mx-auto mb-20 bg-brown-medium/30 p-8 md:p-12 rounded-lg border border-gold/10 shadow-2xl relative"
       >
@@ -254,7 +258,6 @@
         </div>
       </article>
 
-      <!-- Video -->
       <section class="max-w-5xl mx-auto mb-20">
         <h3
           class="font-serif text-3xl text-center text-gold mb-10 uppercase tracking-wider"
@@ -331,7 +334,6 @@
       </div>
     </footer>
 
-    <!-- Scripts -->
     <script src="js/main.js"></script>
   </body>
 </html>
