@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact | The Lighthouse</title>
+    <link rel="icon" type="image/x-icon" href="/assets/ico.ico" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              gold: {
+                DEFAULT: "#d4af37",
+                light: "#f9d76e",
+                dark: "#aa8c2c",
+              },
+              brown: {
+                dark: "#1f140e",
+                medium: "#2c1e16",
+                warm: "#3e2723",
+              },
+            },
+            fontFamily: {
+              sans: ["Josefin Sans", "sans-serif"],
+              serif: ["Limelight", "cursive"],
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <style>
+      .bg-pattern {
+        background-color: #1f140e;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+    </style>
+  </head>
+  <body
+    class="bg-pattern text-gray-200 font-sans antialiased overflow-x-hidden"
+  >
+    <!-- Audio Player -->
+    <div class="fixed bottom-5 right-5 z-50">
+      <button
+        id="musicToggle"
+        class="bg-gold hover:bg-gold-dark text-brown-dark rounded-full p-3 shadow-lg transition-transform hover:scale-110"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+          />
+        </svg>
+      </button>
+      <audio id="backgroundJazz" loop>
+        <source src="assets/jazz.mp3" type="audio/mpeg" />
+      </audio>
+    </div>
+
+    <!-- Floating Navigation -->
+    <div class="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
+      <nav
+        class="w-full max-w-5xl bg-brown-dark/90 backdrop-blur-md border border-gold/30 shadow-2xl rounded-full px-8 py-4 flex justify-between items-center transition-all duration-300 relative"
+      >
+        <a
+          href="index.html"
+          class="font-serif text-2xl font-bold text-gold gold-glow tracking-wider shrink-0 uppercase"
+          >The Lighthouse</a
+        >
+
+        <ul class="hidden md:flex space-x-8 items-center">
+          <li>
+            <a
+              href="index.html"
+              class="nav-link text-sm uppercase tracking-widest hover:text-gold transition-colors"
+              >Home</a
+            >
+          </li>
+          <li>
+            <a
+              href="menu.html"
+              class="nav-link text-sm uppercase tracking-widest hover:text-gold transition-colors"
+              >Menu</a
+            >
+          </li>
+          <li>
+            <a
+              href="gallery.html"
+              class="nav-link text-sm uppercase tracking-widest hover:text-gold transition-colors"
+              >Gallery</a
+            >
+          </li>
+          <li>
+            <a
+              href="events.html"
+              class="nav-link text-sm uppercase tracking-widest hover:text-gold transition-colors"
+              >Events</a
+            >
+          </li>
+          <li>
+            <a
+              href="contact.html"
+              class="px-5 py-2 border border-gold bg-gold text-brown-dark rounded-full hover:bg-gold-light transition-all text-sm uppercase tracking-widest font-semibold"
+              >Book</a
+            >
+          </li>
+        </ul>
+
+        <button id="burgerBtn" class="md:hidden text-gold focus:outline-none">
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            ></path>
+          </svg>
+        </button>
+
+        <!-- Mobile Menu Dropdown -->
+        <div
+          id="mobileMenu"
+          class="absolute top-full left-0 right-0 mt-4 bg-brown-dark/95 backdrop-blur-xl border border-gold/20 rounded-2xl p-6 hidden flex-col space-y-4 shadow-2xl md:hidden"
+        >
+          <a
+            href="index.html"
+            class="text-center py-2 border-b border-gold/10 hover:text-gold transition-colors"
+            >Home</a
+          >
+          <a
+            href="menu.html"
+            class="text-center py-2 border-b border-gold/10 hover:text-gold transition-colors"
+            >Menu</a
+          >
+          <a
+            href="gallery.html"
+            class="text-center py-2 border-b border-gold/10 hover:text-gold transition-colors"
+            >Gallery</a
+          >
+          <a
+            href="events.html"
+            class="text-center py-2 border-b border-gold/10 hover:text-gold transition-colors"
+            >Events</a
+          >
+          <a href="contact.html" class="text-center py-2 font-bold text-gold"
+            >Book a Table</a
+          >
+        </div>
+      </nav>
+    </div>
+
+    <!-- Header -->
+    <header class="pt-40 pb-20 text-center px-4">
+      <h1
+        class="font-serif text-5xl md:text-6xl text-gold mb-6 drop-shadow-lg leading-tight uppercase"
+      >
+        Reservation
+      </h1>
+      <p class="text-xl text-gray-400 font-light tracking-widest uppercase">
+        Secure your spot
+      </p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 pb-20 max-w-5xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <!-- Contact Info -->
+        <div class="space-y-12">
+          <div class="bg-brown-medium/40 p-8 rounded-xl border border-gold/10">
+            <h3 class="font-serif text-2xl text-gold mb-6">Opening Hours</h3>
+            <ul class="space-y-2 text-gray-300 font-light">
+              <li class="flex justify-between">
+                <span>Wednesday - Thursday</span> <span>18:00 - 01:00</span>
+              </li>
+              <li class="flex justify-between">
+                <span>Friday - Saturday</span> <span>18:00 - 03:00</span>
+              </li>
+              <li class="flex justify-between">
+                <span>Sunday</span> <span>17:00 - 00:00</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="bg-brown-medium/40 p-8 rounded-xl border border-gold/10">
+            <h3 class="font-serif text-2xl text-gold mb-6">Location</h3>
+            <address class="not-italic text-gray-300 font-light space-y-2">
+              <p>123 Jazz Avenue</p>
+              <p>New York, NY 10010</p>
+              <p class="mt-4">
+                <span class="text-gold">T:</span> +1 (555) 123-4567
+              </p>
+              <p><span class="text-gold">E:</span> reserve@thelighthouse.com</p>
+            </address>
+          </div>
+        </div>
+
+        <!-- Booking Form -->
+        <form
+          id="bookingForm"
+          class="bg-brown-medium/40 p-8 rounded-xl border border-gold/10 space-y-6"
+        >
+          <div>
+            <label class="block text-gold text-sm uppercase tracking-wider mb-2"
+              >Name</label
+            >
+            <input
+              type="text"
+              id="name"
+              required
+              class="w-full bg-brown-dark border border-gold/30 rounded p-3 text-gold focus:outline-none focus:border-gold transition-colors"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gold text-sm uppercase tracking-wider mb-2"
+              >Email</label
+            >
+            <input
+              type="email"
+              id="email"
+              required
+              class="w-full bg-brown-dark border border-gold/30 rounded p-3 text-gold focus:outline-none focus:border-gold transition-colors"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                class="block text-gold text-sm uppercase tracking-wider mb-2"
+                >Date</label
+              >
+              <input
+                type="date"
+                id="date"
+                required
+                class="w-full bg-brown-dark border border-gold/30 rounded p-3 text-gray-300 focus:outline-none focus:border-gold transition-colors"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-gold text-sm uppercase tracking-wider mb-2"
+                >Time</label
+              >
+              <select
+                id="time"
+                required
+                class="w-full bg-brown-dark border border-gold/30 rounded p-3 text-gray-300 focus:outline-none focus:border-gold transition-colors"
+              >
+                <option value="">Select Time</option>
+                <option value="18:00">18:00</option>
+                <option value="19:00">19:00</option>
+                <option value="20:00">20:00</option>
+                <option value="21:00">21:00</option>
+                <option value="22:00">22:00</option>
+                <option value="23:00">23:00</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Availability Display -->
+          <div
+            id="availabilityDisplay"
+            class="hidden text-center py-2 border border-gold/20 rounded bg-black/20"
+          >
+            <span class="text-gold uppercase text-sm tracking-wider"
+              >Seats Available:
+            </span>
+            <span id="seatsCount" class="text-white font-bold text-lg">--</span>
+          </div>
+
+          <div>
+            <label class="block text-gold text-sm uppercase tracking-wider mb-2"
+              >Guest Count</label
+            >
+            <select
+              id="guests"
+              class="w-full bg-brown-dark border border-gold/30 rounded p-3 text-gray-300 focus:outline-none focus:border-gold transition-colors"
+            >
+              <option value="2">2 People</option>
+              <option value="3">3 People</option>
+              <option value="4">4 People</option>
+              <option value="5">5 People</option>
+              <option value="6">6 People</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gold text-sm uppercase tracking-wider mb-2"
+              >Special Request</label
+            >
+            <textarea
+              id="request"
+              rows="4"
+              class="w-full bg-brown-dark border border-gold/30 rounded p-3 text-gold focus:outline-none focus:border-gold transition-colors"
+            ></textarea>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full py-4 bg-gold text-brown-dark font-bold uppercase tracking-widest hover:bg-white transition-colors duration-300"
+          >
+            Confirm Booking
+          </button>
+
+          <div
+            id="bookingMessage"
+            class="hidden text-center text-sm p-3 rounded"
+          ></div>
+        </form>
+
+        <script>
+          const form = document.getElementById("bookingForm");
+          const dateInput = document.getElementById("date");
+          const timeInput = document.getElementById("time");
+          const seatsCount = document.getElementById("seatsCount");
+          const availabilityDisplay = document.getElementById(
+            "availabilityDisplay"
+          );
+          const bookingMessage = document.getElementById("bookingMessage");
+
+          // Set min date to today
+          const today = new Date().toISOString().split("T")[0];
+          dateInput.min = today;
+
+          async function checkAvailability() {
+            const date = dateInput.value;
+            const time = timeInput.value;
+
+            if (date && time) {
+              try {
+                const response = await fetch(
+                  `/api/availability?date=${date}&time=${time}`
+                );
+                const data = await response.json();
+
+                seatsCount.textContent = data.seatsLeft;
+                availabilityDisplay.classList.remove("hidden");
+
+                if (data.seatsLeft === 0) {
+                  seatsCount.classList.add("text-red-500");
+                  seatsCount.classList.remove("text-white");
+                } else {
+                  seatsCount.classList.remove("text-red-500");
+                  seatsCount.classList.add("text-white");
+                }
+              } catch (error) {
+                console.error("Error fetching availability:", error);
+              }
+            } else {
+              availabilityDisplay.classList.add("hidden");
+            }
+          }
+
+          dateInput.addEventListener("change", checkAvailability);
+          timeInput.addEventListener("change", checkAvailability);
+
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const bookingData = {
+              name: document.getElementById("name").value,
+              email: document.getElementById("email").value,
+              date: document.getElementById("date").value,
+              time: document.getElementById("time").value,
+              guests: document.getElementById("guests").value,
+              request: document.getElementById("request").value,
+            };
+
+            try {
+              const response = await fetch("/api/book", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(bookingData),
+              });
+
+              const result = await response.json();
+
+              bookingMessage.classList.remove("hidden");
+              if (response.ok) {
+                bookingMessage.textContent = "Booking Confirmed! See you soon.";
+                bookingMessage.className =
+                  "text-center text-sm p-3 rounded bg-green-900/50 text-green-200 border border-green-500/30";
+                form.reset();
+                availabilityDisplay.classList.add("hidden");
+                setTimeout(() => bookingMessage.classList.add("hidden"), 5000);
+              } else {
+                bookingMessage.textContent = result.error || "Booking failed.";
+                bookingMessage.className =
+                  "text-center text-sm p-3 rounded bg-red-900/50 text-red-200 border border-red-500/30";
+              }
+            } catch (error) {
+              console.error("Error booking:", error);
+              bookingMessage.textContent = "Network error. Please try again.";
+              bookingMessage.classList.remove("hidden");
+            }
+          });
+        </script>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-brown-dark border-t border-gold/20 py-10 mt-10">
+      <div class="container mx-auto px-6 text-center">
+        <h4
+          class="font-serif text-2xl text-gold mb-4 uppercase tracking-widest"
+        >
+          The Lighthouse
+        </h4>
+        <div
+          class="flex justify-center space-x-6 mb-6 font-light uppercase text-xs tracking-widest"
+        >
+          <a href="#" class="text-gray-400 hover:text-gold transition-colors"
+            >Instagram</a
+          >
+          <a href="#" class="text-gray-400 hover:text-gold transition-colors"
+            >Facebook</a
+          >
+        </div>
+        <p class="text-gray-600 text-sm font-light">
+          &copy; 2026 The Lighthouse.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+  </body>
+</html>

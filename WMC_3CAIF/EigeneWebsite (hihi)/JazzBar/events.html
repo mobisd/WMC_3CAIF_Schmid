@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Events | The Lighthouse</title>
+    <link rel="icon" type="image/x-icon" href="/assets/ico.ico" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              gold: {
+                DEFAULT: "#d4af37",
+                light: "#f9d76e",
+                dark: "#aa8c2c",
+              },
+              brown: {
+                dark: "#1f140e",
+                medium: "#2c1e16",
+                warm: "#3e2723",
+              },
+            },
+            fontFamily: {
+              sans: ["Josefin Sans", "sans-serif"],
+              serif: ["Limelight", "cursive"],
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <style>
+      .bg-pattern {
+        background-color: #1f140e;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+    </style>
+  </head>
+  <body
+    class="bg-pattern text-gray-200 font-sans antialiased overflow-x-hidden"
+  >
+    <!-- Audio Player -->
+    <div class="fixed bottom-5 right-5 z-50">
+      <button
+        id="musicToggle"
+        class="bg-gold hover:bg-gold-dark text-brown-dark rounded-full p-3 shadow-lg transition-transform hover:scale-110"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+          />
+        </svg>
+      </button>
+      <audio id="backgroundJazz" loop>
+        <source src="assets/jazz.mp3" type="audio/mpeg" />
+      </audio>
+    </div>
+
+    <!-- Floating Navigation -->
+    <div class="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
+      <nav
+        class="w-full max-w-5xl bg-brown-dark/90 backdrop-blur-md border border-gold/30 shadow-2xl rounded-full px-8 py-4 flex justify-between items-center transition-all duration-300 relative"
+      >
+        <a
+          href="index.html"
+          class="font-serif text-2xl font-bold text-gold gold-glow tracking-wider shrink-0 uppercase"
+          >The Lighthouse</a
+        >
+
+        <ul class="hidden md:flex space-x-8 items-center">
+          <li>
+            <a
+              href="index.html"
+              class="nav-link text-sm uppercase tracking-widest hover:text-gold transition-colors"
+              >Home</a
+            >
+          </li>
+          <li>
+            <a
+              href="menu.html"
+              class="nav-link text-sm uppercase tracking-widest hover:text-gold transition-colors"
+              >Menu</a
+            >
+          </li>
+          <li>
+            <a
+              href="gallery.html"
+              class="nav-link text-sm uppercase tracking-widest hover:text-gold transition-colors"
+              >Gallery</a
+            >
+          </li>
+          <li>
+            <a
+              href="events.html"
+              class="nav-link text-sm uppercase tracking-widest text-gold font-bold"
+              >Events</a
+            >
+          </li>
+          <li>
+            <a
+              href="contact.html"
+              class="px-5 py-2 border border-gold text-gold rounded-full hover:bg-gold hover:text-brown-dark transition-all text-sm uppercase tracking-widest font-semibold"
+              >Book</a
+            >
+          </li>
+        </ul>
+
+        <button id="burgerBtn" class="md:hidden text-gold focus:outline-none">
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            ></path>
+          </svg>
+        </button>
+
+        <!-- Mobile Menu Dropdown -->
+        <div
+          id="mobileMenu"
+          class="absolute top-full left-0 right-0 mt-4 bg-brown-dark/95 backdrop-blur-xl border border-gold/20 rounded-2xl p-6 hidden flex-col space-y-4 shadow-2xl md:hidden"
+        >
+          <a
+            href="index.html"
+            class="text-center py-2 border-b border-gold/10 hover:text-gold transition-colors"
+            >Home</a
+          >
+          <a
+            href="menu.html"
+            class="text-center py-2 border-b border-gold/10 hover:text-gold transition-colors"
+            >Menu</a
+          >
+          <a
+            href="gallery.html"
+            class="text-center py-2 border-b border-gold/10 hover:text-gold transition-colors"
+            >Gallery</a
+          >
+          <a
+            href="events.html"
+            class="text-center py-2 border-b border-gold/10 text-gold font-bold"
+            >Events</a
+          >
+          <a href="contact.html" class="text-center py-2 font-bold text-gold"
+            >Book a Table</a
+          >
+        </div>
+      </nav>
+    </div>
+
+    <!-- Header -->
+    <header class="pt-40 pb-20 text-center px-4">
+      <h1
+        class="font-serif text-5xl md:text-6xl text-gold mb-6 drop-shadow-lg leading-tight uppercase"
+      >
+        Upcoming Nights
+      </h1>
+      <p class="text-xl text-gray-400 font-light tracking-widest uppercase">
+        The Schedule
+      </p>
+    </header>
+
+    <!-- Events List -->
+    <main class="container mx-auto px-6 pb-20 max-w-4xl">
+      <!-- Event Item 1 -->
+      <div
+        class="group relative bg-brown-medium/40 border border-gold/10 rounded-xl overflow-hidden mb-8 hover:border-gold/30 transition-all duration-300"
+      >
+        <div
+          class="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition-opacity"
+        ></div>
+        <div class="flex flex-col md:flex-row">
+          <div class="md:w-1/3 relative h-48 md:h-auto">
+            <img
+              src="https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=800&auto=format&fit=crop"
+              class="absolute inset-0 w-full h-full object-cover filter sepia-[.3] group-hover:sepia-0 transition-all duration-500"
+            />
+            <div
+              class="absolute top-4 left-4 bg-gold text-brown-dark font-bold px-3 py-1 rounded shadow-lg text-center"
+            >
+              <span class="block text-xs uppercase tracking-wider">OCT</span>
+              <span class="block text-2xl font-serif">12</span>
+            </div>
+          </div>
+          <div class="p-8 md:w-2/3 flex flex-col justify-center relative z-10">
+            <h3 class="font-serif text-2xl text-gold mb-2">
+              Midnight Blue Quartet
+            </h3>
+            <p class="text-gray-400 mb-4 font-light text-sm italic">
+              21:00 - 01:00 | Entry: $15
+            </p>
+            <p class="text-gray-300 mb-6 font-light leading-relaxed">
+              Ein Abend voller sanfter Melodien und improvisierten Solos. Das
+              'Midnight Blue Quartet' bringt den klassischen Sound der 50er
+              Jahre zurück.
+            </p>
+            <a
+              href="contact.html"
+              class="inline-block self-start px-6 py-2 border border-gold/50 text-gold text-sm uppercase tracking-widest hover:bg-gold hover:text-brown-dark transition-colors"
+            >
+              Reserve Table
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event Item 2 -->
+      <div
+        class="group relative bg-brown-medium/40 border border-gold/10 rounded-xl overflow-hidden mb-8 hover:border-gold/30 transition-all duration-300"
+      >
+        <div
+          class="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition-opacity"
+        ></div>
+        <div class="flex flex-col md:flex-row">
+          <div class="md:w-1/3 relative h-48 md:h-auto">
+            <img
+              src="https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?q=80&w=800&auto=format&fit=crop"
+              class="absolute inset-0 w-full h-full object-cover filter sepia-[.3] group-hover:sepia-0 transition-all duration-500"
+            />
+            <div
+              class="absolute top-4 left-4 bg-gold text-brown-dark font-bold px-3 py-1 rounded shadow-lg text-center"
+            >
+              <span class="block text-xs uppercase tracking-wider">OCT</span>
+              <span class="block text-2xl font-serif">19</span>
+            </div>
+          </div>
+          <div class="p-8 md:w-2/3 flex flex-col justify-center relative z-10">
+            <h3 class="font-serif text-2xl text-gold mb-2">
+              Sarah & The Swing Kings
+            </h3>
+            <p class="text-gray-400 mb-4 font-light text-sm italic">
+              20:30 - Late | Entry: $20
+            </p>
+            <p class="text-gray-300 mb-6 font-light leading-relaxed">
+              Beine schwingen ist angesagt! Ein energiegeladener Abend mit
+              Swing, Bebop und einer Prise modernen Funk.
+            </p>
+            <a
+              href="contact.html"
+              class="inline-block self-start px-6 py-2 border border-gold/50 text-gold text-sm uppercase tracking-widest hover:bg-gold hover:text-brown-dark transition-colors"
+            >
+              Reserve Table
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event Item 3 -->
+      <div
+        class="group relative bg-brown-medium/40 border border-gold/10 rounded-xl overflow-hidden mb-8 hover:border-gold/30 transition-all duration-300"
+      >
+        <div
+          class="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition-opacity"
+        ></div>
+        <div class="flex flex-col md:flex-row">
+          <div class="md:w-1/3 relative h-48 md:h-auto">
+            <img
+              src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=800&auto=format&fit=crop"
+              class="absolute inset-0 w-full h-full object-cover filter sepia-[.3] group-hover:sepia-0 transition-all duration-500"
+            />
+            <div
+              class="absolute top-4 left-4 bg-gold text-brown-dark font-bold px-3 py-1 rounded shadow-lg text-center"
+            >
+              <span class="block text-xs uppercase tracking-wider">OCT</span>
+              <span class="block text-2xl font-serif">25</span>
+            </div>
+          </div>
+          <div class="p-8 md:w-2/3 flex flex-col justify-center relative z-10">
+            <h3 class="font-serif text-2xl text-gold mb-2">Piano Solo Night</h3>
+            <p class="text-gray-400 mb-4 font-light text-sm italic">
+              19:00 - 23:00 | Free Entry
+            </p>
+            <p class="text-gray-300 mb-6 font-light leading-relaxed">
+              Genießen Sie unsere besten Cocktails begleitet von virtuosen
+              Klängen am schwarzen Flügel. Intim und unvergesslich.
+            </p>
+            <a
+              href="contact.html"
+              class="inline-block self-start px-6 py-2 border border-gold/50 text-gold text-sm uppercase tracking-widest hover:bg-gold hover:text-brown-dark transition-colors"
+            >
+              Reserve Table
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-brown-dark border-t border-gold/20 py-10 mt-10">
+      <div class="container mx-auto px-6 text-center">
+        <h4
+          class="font-serif text-2xl text-gold mb-4 uppercase tracking-widest"
+        >
+          The Lighthouse
+        </h4>
+        <div
+          class="flex justify-center space-x-6 mb-6 font-light uppercase text-xs tracking-widest"
+        >
+          <a href="#" class="text-gray-400 hover:text-gold transition-colors"
+            >Instagram</a
+          >
+          <a href="#" class="text-gray-400 hover:text-gold transition-colors"
+            >Facebook</a
+          >
+        </div>
+        <p class="text-gray-600 text-sm font-light">
+          &copy; 2026 The Lighthouse.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+  </body>
+</html>
