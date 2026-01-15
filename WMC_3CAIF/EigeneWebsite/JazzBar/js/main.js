@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- Navbar Logic ---
+  // nav
   const nav = document.querySelector("nav");
   const navLinks = document.querySelector("nav ul");
   const burgerBtn = document.getElementById("burgerBtn");
@@ -123,8 +123,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // volume auf 1%
-  audio.volume = 0.01;
+  audio.volume = 0.1;
   audio.muted = isMuted;
+  promoVideo.volume = 0.4;
   updateIcon();
 
   // audio autopay nen try geben
