@@ -44,6 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
     burgerBtn.addEventListener("click", () => {
       mobileMenu.classList.toggle("hidden");
       mobileMenu.classList.toggle("flex");
+      // Fix clipping issue by allowing overflow when menu is open
+      nav.classList.toggle("overflow-visible");
     });
   }
 
