@@ -4,47 +4,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const navLinks = document.querySelector("nav ul");
   const burgerBtn = document.getElementById("burgerBtn");
   const mobileMenu = document.getElementById("mobileMenu");
-  let isHovering = false;
-
-  // when scrolling dann collapsieren
-  window.addEventListener("scroll", () => {
-    if (window.scrollY > 50) {
-      // nav collapgsiert wenn wir nicht hovern
-      if (!isHovering && !mobileMenu.classList.contains("flex")) {
-        nav.classList.add("nav-collapsed");
-        nav.classList.remove("nav-expanded");
-      }
-    } else {
-      // oben immer expaneded halt
-      nav.classList.remove("nav-collapsed");
-      nav.classList.remove("nav-expanded");
-    }
-  });
-
-  const logo = nav.querySelector("a:first-child");
-
-  // exapnd when halt hover
-  nav.addEventListener("mouseenter", () => {
-    isHovering = true;
-    if (window.scrollY > 50) {
-      nav.classList.remove("nav-collapsed");
-      nav.classList.add("nav-expanded");
-    }
-  });
-
-  nav.addEventListener("mouseleave", () => {
-    isHovering = false;
-    if (window.scrollY > 50 && !mobileMenu.classList.contains("flex")) {
-      nav.classList.remove("nav-expanded");
-      nav.classList.add("nav-collapsed");
-    }
-  });
 
   if (burgerBtn) {
     burgerBtn.addEventListener("click", () => {
       mobileMenu.classList.toggle("hidden");
       mobileMenu.classList.toggle("flex");
-      // Fix clipping issue by allowing overflow when menu is open
       nav.classList.toggle("overflow-visible");
     });
   }
@@ -67,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
     `;
 
-  // video
+  // video pts katze pts katze
   const promoVideo = document.getElementById("promoVideo");
   const promoBtn = document.getElementById("promoMuteBtn");
 
@@ -84,13 +48,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // checkt ob video läuft
+    // checkt ob video läuft (beatboxen)
     promoVideo
       .play()
       .catch((e) => console.log("Promo video autoplay blocked", e));
   }
 
-  // 1. Initialize State
+  // lade gespeicherte einstellungen
   let isMuted = localStorage.getItem(STORAGE_KEY_MUTED) === "true";
   let savedTime = parseFloat(localStorage.getItem(STORAGE_KEY_TIME));
   let savedTimestamp = parseInt(localStorage.getItem(STORAGE_KEY_TIMESTAMP));
@@ -130,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
   promoVideo.volume = 0.4;
   updateIcon();
 
-  // audio autopay nen try geben
+  // audio autoplay nen try geben (es geht nicht :( )
   const playAudio = async () => {
     try {
       await audio.play();

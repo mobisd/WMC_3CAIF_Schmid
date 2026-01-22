@@ -329,6 +329,8 @@
           );
           const bookingMessage = document.getElementById("bookingMessage");
 
+          const API_BASE_URL = "http://localhost:3000"; 
+
           const today = new Date().toISOString().split("T")[0];
           dateInput.min = today;
 
@@ -339,7 +341,7 @@
             if (date && time) {
               try {
                 const response = await fetch(
-                  `/api/availability?date=${date}&time=${time}`
+                  `${API_BASE_URL}/api/availability?date=${date}&time=${time}`
                 );
                 const data = await response.json();
 
@@ -377,13 +379,16 @@
             };
 
             try {
-              const response = await fetch("/api/book", {
+              const response = await fetch(`${API_BASE_URL}/api/book`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify(bookingData),
               });
+
+              // falls fehli hihi
+              console.log("Server response status:", response.status);
 
               const result = await response.json();
 
@@ -396,12 +401,14 @@
                 availabilityDisplay.classList.add("hidden");
                 setTimeout(() => bookingMessage.classList.add("hidden"), 5000);
               } else {
+                alert("Booking failed: " + (result.error || "Unknown error"));
                 bookingMessage.textContent = result.error || "Booking failed.";
                 bookingMessage.className =
                   "text-center text-sm p-3 rounded bg-red-900/50 text-red-200 border border-red-500/30";
               }
             } catch (error) {
               console.error("Error booking:", error);
+              alert("Network Error: Could not connect to server at " + API_BASE_URL + "\n\nPossible reasons:\n1. Server is down\n2. Firewall is blocking port 3000\n3. Mixed Content (HTTPS calling HTTP)");
               bookingMessage.textContent = "Network error. Please try again.";
               bookingMessage.classList.remove("hidden");
             }
