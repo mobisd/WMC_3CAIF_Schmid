@@ -1,0 +1,34 @@
+body {
+    font-family: Arial, sans-serif;
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+caption {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+}
+
+th,
+td {
+    border: 1px solid #cccccc;
+    padding: 0.5em;
+    text-align: left;
+}
+
+table>thead>tr>th {
+    background-color: #f0f0f0;
+    cursor: pointer;
+    user-select: none;
+}
+
+table>thead>tr>th:hover {
+    background-color: #dddddd;
+}
