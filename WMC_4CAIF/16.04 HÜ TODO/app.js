@@ -35,7 +35,10 @@ function toggleTodoStatus(todo) {
 // - Static references to DOM nodes needed after the start of the application
 
 const newTodoText = document.getElementById("todo-input");
+const newTodoPriority = document.getElementById("todo-priority");
 const addBtn = document.getElementById("todo-add");
+const filterText = document.getElementById("todo-filter-text");
+const filterPriority = document.getElementById("todo-filter-priority");
 const todoList = document.getElementById("todo-list");
 const todoListDone = document.getElementById("todo-list-done");
 
@@ -43,9 +46,22 @@ const todoListDone = document.getElementById("todo-list-done");
 // - Dynamic creation of DOM nodes needed upon user interaction
 // - Here we will create a function that will create a todo item
 
+function getPriorityLabel(priority) {
+  const labels = {
+    1: "Sehr hoch",
+    2: "Hoch",
+    3: "Mittel",
+    4: "Niedrig",
+    5: "Sehr niedrig",
+  };
+
+  return labels[priority];
+}
+
 function createTodoElement(todo) {
   const listItem = document.createElement("li");
   listItem.className = "todo-item";
+  listItem.dataset.priority = String(todo.priority);
   if (todo.completed) {
     listItem.classList.add("is-complete");
   }
@@ -60,13 +76,42 @@ function createTodoElement(todo) {
   todoText.className = "todo-text";
   todoText.innerText = todo.text;
 
+  const priorityBadge = document.createElement("span");
+  priorityBadge.className = "todo-priority";
+  priorityBadge.innerText = `Priorität ${todo.priority} - ${getPriorityLabel(todo.priority)}`;
+
+  const content = document.createElement("div");
+  content.className = "todo-content";
+  content.append(todoText, priorityBadge);
+
+  const priorityControls = document.createElement("div");
+  priorityControls.className = "todo-priority-controls";
+
+  const decreaseBtn = document.createElement("button");
+  decreaseBtn.className = "todo-priority-btn";
+  decreaseBtn.type = "button";
+  decreaseBtn.innerText = "-";
+  decreaseBtn.disabled = todo.priority === 5;
+  decreaseBtn.setAttribute("aria-label", `Priorität von ${todo.text} senken`);
+  decreaseBtn.addEventListener("click", (_) => onPriorityButtonClicked(todo, 1));
+
+  const increaseBtn = document.createElement("button");
+  increaseBtn.className = "todo-priority-btn";
+  increaseBtn.type = "button";
+  increaseBtn.innerText = "+";
+  increaseBtn.disabled = todo.priority === 1;
+  increaseBtn.setAttribute("aria-label", `Priorität von ${todo.text} erhöhen`);
+  increaseBtn.addEventListener("click", (_) => onPriorityButtonClicked(todo, -1));
+
+  priorityControls.append(decreaseBtn, increaseBtn);
+
   const deleteBtn = document.createElement("input");
   deleteBtn.className = "todo-delete";
   deleteBtn.value = "Delete";
   deleteBtn.type = "button";
   deleteBtn.addEventListener("click", (_) => onDeleteButtonClicked(todo));
 
-  listItem.append(cbDone, todoText, deleteBtn);
+  listItem.append(cbDone, content, priorityControls, deleteBtn);
   return listItem;
 }
 
@@ -78,7 +123,25 @@ function createTodoElement(todo) {
 function render() {
   todoList.innerHTML = "";
   todoListDone.innerHTML = "";
-  for (const ti of todos) {
+  const searchTerm = filterText.value.trim().toLowerCase();
+  const selectedPriority = filterPriority.value;
+  const sortedTodos = [...todos].sort((a, b) => {
+    if (a.completed !== b.completed) {
+      return Number(a.completed) - Number(b.completed);
+    }
+
+    return a.priority - b.priority;
+  });
+
+  for (const ti of sortedTodos) {
+    const matchesText = ti.text.toLowerCase().includes(searchTerm);
+    const matchesPriority =
+      selectedPriority === "all" || ti.priority === Number(selectedPriority);
+
+    if (!matchesText || !matchesPriority) {
+      continue;
+    }
+
     const todoElement = createTodoElement(ti);
     if (!ti.completed) {
       todoList.append(todoElement);
@@ -96,8 +159,11 @@ function render() {
 
 function onAddButtonClicked() {
   if (newTodoText.value.trim() !== "") {
-    const ti = new TodoItem(newTodoText.value.trim(), false, 3);
+    const priority = Number(newTodoPriority.value);
+    const ti = new TodoItem(newTodoText.value.trim(), false, priority);
     addTodoItem(ti);
+    newTodoText.value = "";
+    newTodoPriority.value = "3";
     render();
   }
 }
@@ -112,6 +178,12 @@ function onTodoStatusChanged(todo) {
   render();
 }
 
+function onPriorityButtonClicked(todo, change) {
+  const nextPriority = Math.min(5, Math.max(1, todo.priority + change));
+  todo.priority = nextPriority;
+  render();
+}
+
 function onKeyDownEvent(e) {
   if (e.key === "Enter") {
     onAddButtonClicked();
@@ -123,6 +195,8 @@ function onKeyDownEvent(e) {
 
 addBtn.addEventListener("click", (_) => onAddButtonClicked());
 newTodoText.addEventListener("keydown", (e) => onKeyDownEvent(e));
+filterText.addEventListener("input", () => render());
+filterPriority.addEventListener("change", () => render());
 // 8. INITIAL RENDER
 // - Here will call the render function to render the initial state of the application
 

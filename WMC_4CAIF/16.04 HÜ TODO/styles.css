@@ -110,7 +110,7 @@ body {
   margin: 0 auto;
   padding: 28px 18px 34px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 10px 10px;
   color: var(--text);
   font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
@@ -134,7 +134,8 @@ body::before {
 
 body > h1,
 body > h2,
-body > ul {
+body > ul,
+body > .filter-bar {
   grid-column: 1 / -1;
 }
 
@@ -189,6 +190,50 @@ h2 {
 }
 
 #todo-input:focus {
+  outline: none;
+  border-color: rgba(111, 144, 173, 0.75);
+  box-shadow: 0 0 0 4px rgba(111, 144, 173, 0.16);
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.priority-input {
+  display: grid;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.priority-input select {
+  min-width: 150px;
+  padding: 12px 13px;
+  border: 1px solid rgba(143, 167, 189, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--headline);
+  font: inherit;
+}
+
+.filter-bar input {
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid rgba(143, 167, 189, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--headline);
+  font: inherit;
+}
+
+.filter-bar input:focus,
+.priority-input select:focus {
   outline: none;
   border-color: rgba(111, 144, 173, 0.75);
   box-shadow: 0 0 0 4px rgba(111, 144, 173, 0.16);
@@ -257,7 +302,7 @@ ul {
 
 .todo-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
   padding: 11px 13px;
@@ -271,6 +316,26 @@ ul {
   background: var(--done-bg);
 }
 
+.todo-item[data-priority="1"] {
+  border-left: 5px solid #c96f63;
+}
+
+.todo-item[data-priority="2"] {
+  border-left: 5px solid #d8925b;
+}
+
+.todo-item[data-priority="3"] {
+  border-left: 5px solid #7fa4c3;
+}
+
+.todo-item[data-priority="4"] {
+  border-left: 5px solid #82ae8a;
+}
+
+.todo-item[data-priority="5"] {
+  border-left: 5px solid #93a7ba;
+}
+
 .todo-toggle {
   width: 16px;
   height: 16px;
@@ -279,15 +344,82 @@ ul {
   cursor: pointer;
 }
 
+.todo-content {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
 .todo-text {
   min-width: 0;
   overflow-wrap: anywhere;
   font-size: 1rem;
 }
 
+.todo-priority {
+  justify-self: start;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(127, 164, 195, 0.14);
+  color: var(--headline);
+}
+
+.todo-item[data-priority="1"] .todo-priority {
+  background: rgba(201, 111, 99, 0.18);
+  color: #8f4137;
+}
+
+.todo-item[data-priority="2"] .todo-priority {
+  background: rgba(216, 146, 91, 0.18);
+  color: #8d5524;
+}
+
+.todo-item[data-priority="3"] .todo-priority {
+  background: rgba(127, 164, 195, 0.16);
+  color: #3e607d;
+}
+
+.todo-item[data-priority="4"] .todo-priority {
+  background: rgba(130, 174, 138, 0.18);
+  color: #44694b;
+}
+
+.todo-item[data-priority="5"] .todo-priority {
+  background: rgba(147, 167, 186, 0.18);
+  color: #52687b;
+}
+
 .todo-item.is-complete .todo-text {
   color: #8ba0b2;
   text-decoration: line-through;
+}
+
+.todo-priority-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.todo-priority-btn {
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(127, 164, 195, 0.12);
+  color: var(--headline);
+  box-shadow: none;
+}
+
+.todo-priority-btn:hover {
+  background: rgba(127, 164, 195, 0.2);
+}
+
+.todo-priority-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .todo-delete {
@@ -410,8 +542,29 @@ ul {
     grid-template-columns: auto 1fr;
   }
 
+  .priority-input select {
+    min-width: 0;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .todo-priority-controls,
   .todo-delete {
     grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .todo-priority-controls {
+    justify-content: stretch;
+  }
+
+  .todo-priority-btn {
+    flex: 1;
+  }
+
+  .todo-delete {
     width: 100%;
   }
 }
