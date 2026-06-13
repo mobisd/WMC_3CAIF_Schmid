@@ -8,6 +8,8 @@ status codes: 401 (not logged in), 403 (not owner), 404 (missing), 422
 """
 from __future__ import annotations
 
+from datetime import date
+
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 
@@ -151,28 +153,39 @@ def _serialize_log(log: LogEntry) -> dict:
     }
 
 
-def _read_log_fields(payload: dict) -> dict:
+def _read_log_fields(payload: dict, *, partial: bool = False) -> dict:
     """Validate and normalise the shared log fields. Raises ValueError."""
-    rating = parse_rating(payload.get("rating"))
-    watched_on = parse_watched_on(payload.get("watched_on"))
+    fields = {}
 
-    review = payload.get("review")
-    if review is not None:
-        review = str(review).strip()
-        if len(review) > Config.REVIEW_MAX_LEN:
-            raise ValueError(
-                f"Review is too long (max {Config.REVIEW_MAX_LEN} characters)."
-            )
-        review = review or None  # store empty review as NULL
+    if not partial or "rating" in payload:
+        fields["rating"] = parse_rating(payload.get("rating"))
+    if not partial or "watched_on" in payload:
+        fields["watched_on"] = parse_watched_on(payload.get("watched_on"))
 
-    return {
-        "rating": rating,
-        "watched_on": watched_on,
-        "review": review,
-        "liked": bool(payload.get("liked", False)),
-        "is_rewatch": bool(payload.get("is_rewatch", False)),
-        "contains_spoilers": bool(payload.get("contains_spoilers", False)),
-    }
+    if not partial or "review" in payload:
+        review = payload.get("review")
+        if review is None:
+            fields["review"] = None
+        else:
+            review = str(review).strip()
+            if len(review) > Config.REVIEW_MAX_LEN:
+                raise ValueError(
+                    f"Review is too long (max {Config.REVIEW_MAX_LEN} characters)."
+                )
+            fields["review"] = review or None  # store empty review as NULL
+
+    for key in ("liked", "is_rewatch", "contains_spoilers"):
+        if not partial or key in payload:
+            fields[key] = bool(payload.get(key, False))
+    return fields
+
+
+def _current_log(user_id: int, film_id: int) -> LogEntry | None:
+    return (
+        LogEntry.query.filter_by(user_id=user_id, film_id=film_id)
+        .order_by(LogEntry.created_at.desc(), LogEntry.id.desc())
+        .first()
+    )
 
 
 @api_bp.route("/logs", methods=["POST"])
@@ -191,14 +204,29 @@ def create_log():
         return _err("Film data is temporarily unavailable.", 503)
 
     try:
-        fields = _read_log_fields(payload)
+        fields = _read_log_fields(payload, partial=True)
     except ValueError as exc:
         return _err(str(exc), 422)
 
-    log = LogEntry(user_id=current_user.id, film_id=tmdb_id, **fields)
-    db.session.add(log)
+    is_rewatch = bool(payload.get("is_rewatch", False))
+    log = None if is_rewatch else _current_log(current_user.id, tmdb_id)
+    created = log is None
+    if log is None:
+        fields.setdefault("watched_on", date.today())
+        fields.setdefault("rating", None)
+        fields.setdefault("review", None)
+        fields.setdefault("liked", False)
+        fields.setdefault("contains_spoilers", False)
+        fields["is_rewatch"] = is_rewatch
+        log = LogEntry(user_id=current_user.id, film_id=tmdb_id, **fields)
+        db.session.add(log)
+    else:
+        fields.pop("is_rewatch", None)
+        for key, value in fields.items():
+            setattr(log, key, value)
+
     db.session.commit()
-    return jsonify({"ok": True, "log": _serialize_log(log)}), 201
+    return jsonify({"ok": True, "log": _serialize_log(log)}), 201 if created else 200
 
 
 @api_bp.route("/logs/<int:log_id>", methods=["PATCH"])

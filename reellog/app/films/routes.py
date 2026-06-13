@@ -86,6 +86,7 @@ def film(tmdb_id: int):
         "watched": False,
         "rating": None,
         "is_favorite": False,
+        "current_log": None,
     }
     if current_user.is_authenticated:
         my_logs = (
@@ -93,11 +94,13 @@ def film(tmdb_id: int):
             .order_by(LogEntry.created_at.desc())
             .all()
         )
+        current_log = my_logs[0] if my_logs else None
         user_state = {
             "in_watchlist": current_user.in_watchlist(tmdb_id),
-            "watched": current_user.has_watched(tmdb_id),
-            "rating": current_user.rating_for(tmdb_id),
+            "watched": current_log is not None,
+            "rating": current_log.rating if current_log else None,
             "is_favorite": current_user.is_favorite(tmdb_id),
+            "current_log": current_log,
         }
 
     return render_template(

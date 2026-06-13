@@ -63,6 +63,29 @@ def test_settings_page_renders(auth_client):
     assert resp.status_code == 200
     assert b"multipart/form-data" in resp.data
     assert b"avatar_file" in resp.data
+    assert b"backdrop_file" not in resp.data
+    assert b"backdrop_url" not in resp.data
+
+
+def test_settings_backdrop_picker_uses_user_films(auth_client, user):
+    film = Film(tmdb_id=220, title="Logged Backdrop", backdrop_path="/logged.jpg")
+    other = Film(tmdb_id=221, title="Other Backdrop", backdrop_path="/other.jpg")
+    db.session.add_all([film, other])
+    db.session.add(LogEntry(user_id=user.id, film_id=220))
+    db.session.commit()
+
+    resp = auth_client.get("/settings")
+    body = resp.data.decode()
+    assert "Logged Backdrop" in body
+    assert "Other Backdrop" not in body
+
+    resp = auth_client.post(
+        "/settings",
+        data={"form_type": "profile", "backdrop_film_id": "220"},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+    assert db.session.get(User, user.id).backdrop_url.endswith("/logged.jpg")
 
 
 def test_set_profile_backdrop(auth_client, user):

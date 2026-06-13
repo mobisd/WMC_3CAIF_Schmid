@@ -20,7 +20,7 @@ from sqlalchemy.orm import joinedload
 
 from ..config import Config
 from ..extensions import db
-from ..models import FavoriteFilm, LogEntry, User, WatchlistItem
+from ..models import FavoriteFilm, Film, LogEntry, User, WatchlistItem
 from ..uploads import UploadError, delete_upload, save_image
 from ..validators import normalise_username, password_error, url_error
 
@@ -157,7 +157,26 @@ def settings():
             return _handle_password_change()
         return _handle_profile_update()
 
-    return render_template("settings.html", user=current_user)
+    return render_template(
+        "settings.html", user=current_user, backdrop_films=_backdrop_picker_films()
+    )
+
+
+def _backdrop_picker_films():
+    logged = (
+        Film.query.join(LogEntry, LogEntry.film_id == Film.tmdb_id)
+        .filter(LogEntry.user_id == current_user.id, Film.backdrop_path.isnot(None))
+        .all()
+    )
+    watchlisted = (
+        Film.query.join(WatchlistItem, WatchlistItem.film_id == Film.tmdb_id)
+        .filter(WatchlistItem.user_id == current_user.id, Film.backdrop_path.isnot(None))
+        .all()
+    )
+    films = {}
+    for film in [*logged, *watchlisted]:
+        films.setdefault(film.tmdb_id, film)
+    return list(films.values())
 
 
 def _resolve_image_field(field: str, label: str, current, errors: list):
@@ -198,6 +217,8 @@ def _resolve_image_field(field: str, label: str, current, errors: list):
 def _handle_profile_update():
     display_name = request.form.get("display_name", "").strip() or None
     bio = request.form.get("bio", "").strip() or None
+    backdrop_films = _backdrop_picker_films()
+    backdrop_choices = {film.tmdb_id: film for film in backdrop_films}
 
     errors = []
     if bio and len(bio) > Config.BIO_MAX_LEN:
@@ -206,14 +227,36 @@ def _handle_profile_update():
         errors.append("Display name is too long (max 80 characters).")
 
     new_avatar = _resolve_image_field("avatar", "Avatar", current_user.avatar_url, errors)
-    new_backdrop = _resolve_image_field(
-        "backdrop", "Backdrop", current_user.backdrop_url, errors
-    )
+    new_backdrop = current_user.backdrop_url
+    if request.form.get("remove_backdrop"):
+        delete_upload(current_user.backdrop_url)
+        new_backdrop = None
+    else:
+        backdrop_film_id = request.form.get("backdrop_film_id", "").strip()
+        if backdrop_film_id:
+            try:
+                backdrop_film_id_int = int(backdrop_film_id)
+            except ValueError:
+                errors.append("Choose a valid film backdrop.")
+            else:
+                film = backdrop_choices.get(backdrop_film_id_int)
+                if not film:
+                    errors.append("Choose a valid film backdrop.")
+                else:
+                    delete_upload(current_user.backdrop_url)
+                    new_backdrop = film.backdrop_url("w1280")
 
     if errors:
         for e in errors:
             flash(e, "error")
-        return render_template("settings.html", user=current_user), 422
+        return (
+            render_template(
+                "settings.html",
+                user=current_user,
+                backdrop_films=backdrop_films,
+            ),
+            422,
+        )
 
     current_user.display_name = display_name
     current_user.bio = bio

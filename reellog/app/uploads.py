@@ -23,9 +23,6 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 _FORMAT_EXT = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
 
 AVATAR_SIZE = (512, 512)
-BACKDROP_MAX = (1600, 900)
-
-
 class UploadError(ValueError):
     """Raised for any invalid upload; the message is safe to show the user."""
 
@@ -46,6 +43,9 @@ def save_image(file_storage, kind: str) -> str:
     (``/uploads/<name>``) to store on the user. Raises ``UploadError`` on any
     invalid input.
     """
+    if kind != "avatar":
+        raise UploadError("Only avatar uploads are supported.")
+
     if file_storage is None or not file_storage.filename:
         raise UploadError("No file was selected.")
 
@@ -68,10 +68,7 @@ def save_image(file_storage, kind: str) -> str:
 
     # Apply EXIF orientation, then crop/resize for the target use.
     img = ImageOps.exif_transpose(img)
-    if kind == "avatar":
-        img = ImageOps.fit(img, AVATAR_SIZE, method=Image.LANCZOS)
-    else:  # backdrop
-        img.thumbnail(BACKDROP_MAX, Image.LANCZOS)
+    img = ImageOps.fit(img, AVATAR_SIZE, method=Image.LANCZOS)
 
     # JPEG can't hold alpha; flatten transparency onto a dark background.
     if fmt == "JPEG" and img.mode in ("RGBA", "LA", "P"):

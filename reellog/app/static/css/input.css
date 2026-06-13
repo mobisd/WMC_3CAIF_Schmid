@@ -5,8 +5,8 @@
 /* Custom design tokens as CSS variables (mirror tailwind.config.js) so we can
    reference them in raw CSS where Tailwind utilities are awkward. */
 :root {
-  --accent: #d9a441;
-  --like: #e0567b;
+  --accent: #e5a94e;
+  --like: #f26a8d;
 }
 
 /* Small, genuinely-reusable component classes. Don't over-abstract. */
@@ -38,11 +38,11 @@
   }
 
   .card {
-    @apply rounded-lg border border-border bg-surface;
+    @apply rounded-md border border-line bg-surface;
   }
 
   .label {
-    @apply mb-1 block text-sm font-medium text-text-dim;
+    @apply mb-1 block text-[11px] font-medium uppercase tracking-[0.18em] text-mute;
   }
 
   /* Poster grid: ~2:3, auto-fill, subtle hover lift + accent ring. */
@@ -53,11 +53,11 @@
   }
   .poster {
     @apply relative block overflow-hidden rounded-md bg-surface-2
-      ring-1 ring-white/5 transition duration-175;
+      ring-1 ring-line transition duration-175;
     aspect-ratio: 2 / 3;
   }
   .poster:hover {
-    @apply -translate-y-0.5 ring-accent/50;
+    @apply -translate-y-1 ring-accent/50;
   }
   .poster img {
     @apply h-full w-full object-cover;

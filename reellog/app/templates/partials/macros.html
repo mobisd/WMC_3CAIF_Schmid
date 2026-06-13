@@ -4,9 +4,9 @@
    "MORE →" link. Heads every section so the layout reads as intentional. #}
 {% macro section_label(text, more_href=None, more_text="More") %}
   <div class="flex items-baseline justify-between gap-3">
-    <h2 class="text-xs font-semibold uppercase tracking-widest text-text-mute">{{ text }}</h2>
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-mute">{{ text }}</h2>
     {% if more_href %}
-      <a href="{{ more_href }}" class="text-xs uppercase tracking-wider text-text-mute hover:text-accent">{{ more_text }} →</a>
+      <a href="{{ more_href }}" class="text-[11px] uppercase tracking-[0.18em] text-mute hover:text-accent">{{ more_text }} →</a>
     {% endif %}
   </div>
 {% endmacro %}

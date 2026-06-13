@@ -132,6 +132,9 @@
           data-in-watchlist="{{ 'true' if user_state.in_watchlist else 'false' }}"
           data-rating="{{ user_state.rating or '' }}"
           data-is-favorite="{{ 'true' if user_state.is_favorite else 'false' }}"
+          {% if user_state.current_log %}
+            data-current-log='{{ {"id": user_state.current_log.id, "watched_on": user_state.current_log.watched_on.isoformat() if user_state.current_log.watched_on else None, "rating": user_state.current_log.rating, "review": user_state.current_log.review, "liked": user_state.current_log.liked, "is_rewatch": user_state.current_log.is_rewatch, "contains_spoilers": user_state.current_log.contains_spoilers}|tojson }}'
+          {% endif %}
         >
           <button type="button" class="btn-ghost w-full" data-action="toggle-watchlist" aria-pressed="{{ 'true' if user_state.in_watchlist else 'false' }}">
             <span data-watchlist-label>
@@ -171,8 +174,14 @@
           </div>
 
           <button type="button" class="btn-primary w-full" data-action="open-log">
-            {{ "Log again / edit" if user_state.watched else "Log, rate or review" }}
+            {{ "Edit current entry" if user_state.watched else "Log, rate or review" }}
           </button>
+
+          {% if user_state.watched %}
+            <button type="button" class="btn-ghost w-full" data-action="log-again">
+              Log again
+            </button>
+          {% endif %}
 
           {% if user_state.watched %}
             <p class="text-center text-xs text-accent">You’ve watched this film.</p>

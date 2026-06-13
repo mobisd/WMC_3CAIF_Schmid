@@ -1,4 +1,4 @@
-"""Tests for avatar/backdrop upload validation and the favourites cap."""
+"""Tests for avatar upload validation and the favourites cap."""
 from __future__ import annotations
 
 import io
@@ -46,7 +46,7 @@ def test_save_image_rejects_oversized(app):
     with app.app_context():
         app.config["UPLOAD_MAX_BYTES"] = 100  # tiny cap for the test
         with pytest.raises(UploadError):
-            save_image(_Upload(_png_bytes((256, 256)), "big.png"), "backdrop")
+            save_image(_Upload(_png_bytes((256, 256)), "big.png"), "avatar")
 
 
 def test_save_image_ignores_path_traversal_filename(app):

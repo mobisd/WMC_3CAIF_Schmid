@@ -139,13 +139,12 @@ if (panel) {
   if (panelStars) {
     panelStars.dataset.value = panel.dataset.rating || 0;
     makeStarWidget(panelStars, {
-      allowClear: false,
+      allowClear: true,
       onSet: async (v) => {
-        if (v === 0) return;
         try {
           await api.post("/api/logs", {
             tmdb_id: tmdbId,
-            rating: v,
+            rating: v === 0 ? null : v,
             watched_on: today, // quick-rate also marks it watched today
           });
           ratingText.textContent = `${v / 2} stars · logged`;
@@ -176,23 +175,24 @@ if (panel) {
       starWidget.setValue(0)
     );
 
-    function openDialog(log) {
+    function openDialog(log, { forceRewatch = false } = {}) {
       errorEl.classList.add("hidden");
       form.reset();
       if (log) {
-        editingId = log.id;
-        titleEl.textContent = "Edit entry";
-        form.elements.log_id.value = log.id;
+        editingId = forceRewatch ? null : log.id;
+        titleEl.textContent = forceRewatch ? "Log again" : "Edit entry";
+        form.elements.log_id.value = forceRewatch ? "" : log.id;
         form.elements.watched_on.value = log.watched_on || "";
         form.elements.review.value = log.review || "";
         form.elements.liked.checked = !!log.liked;
-        form.elements.is_rewatch.checked = !!log.is_rewatch;
+        form.elements.is_rewatch.checked = forceRewatch ? true : !!log.is_rewatch;
         form.elements.contains_spoilers.checked = !!log.contains_spoilers;
         starWidget.setValue(log.rating || 0);
       } else {
         editingId = null;
-        titleEl.textContent = "Log this film";
+        titleEl.textContent = forceRewatch ? "Log again" : "Log this film";
         form.elements.watched_on.value = today;
+        form.elements.is_rewatch.checked = forceRewatch;
         starWidget.setValue(0);
       }
       dialog.showModal();
@@ -200,7 +200,11 @@ if (panel) {
 
     panel.querySelector('[data-action="open-log"]')?.addEventListener(
       "click",
-      () => openDialog(null)
+      () => openDialog(panel.dataset.currentLog ? JSON.parse(panel.dataset.currentLog) : null)
+    );
+    panel.querySelector('[data-action="log-again"]')?.addEventListener(
+      "click",
+      () => openDialog(null, { forceRewatch: true })
     );
 
     // Edit / delete buttons live in the entries list (outside the panel).

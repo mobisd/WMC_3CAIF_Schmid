@@ -5,7 +5,7 @@ Design notes:
   floating-point precision bugs entirely; we only convert to 0.5..5.0 at the
   display/input edge via the `stars` helper.
 - A film is "watched" by a user iff >=1 LogEntry exists for that (user, film).
-- A user's current rating for a film = rating of their most recent rated log.
+- A user's current entry for a film = their most recent LogEntry for that film.
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ class User(UserMixin, db.Model):
         "LogEntry",
         back_populates="user",
         cascade="all, delete-orphan",
-        order_by="LogEntry.created_at.desc()",
+        order_by=lambda: (LogEntry.created_at.desc(), LogEntry.id.desc()),
     )
     watchlist = db.relationship(
         "WatchlistItem",
@@ -96,12 +96,17 @@ class User(UserMixin, db.Model):
     def is_favorite(self, film_id: int) -> bool:
         return any(fav.film_id == film_id for fav in self.favorites)
 
-    def rating_for(self, film_id: int):
-        """Most recent rating (int 1..10) the user gave this film, or None."""
+    def current_log_for(self, film_id: int):
+        """Most recent diary entry for this film, or None."""
         for log in self.logs:  # logs are ordered newest-first
-            if log.film_id == film_id and log.rating is not None:
-                return log.rating
+            if log.film_id == film_id:
+                return log
         return None
+
+    def rating_for(self, film_id: int):
+        """Rating on the current entry for this film, or None."""
+        log = self.current_log_for(film_id)
+        return log.rating if log else None
 
     def has_watched(self, film_id: int) -> bool:
         return any(log.film_id == film_id for log in self.logs)

@@ -1,231 +1,132 @@
-# ReelLog 🎬
+# ReelLog
 
-A self-hosted, **Letterboxd-style film diary** for a school. Users search films
-(via TMDB), keep a watch diary, rate films in ½–5 stars, write reviews, build a
+A self-hosted, Letterboxd-style film diary for a school. Users search films via
+TMDB, keep a watch diary, rate films in half-star steps, write reviews, build a
 watchlist, and customise a public profile.
 
-Built with Flask (app-factory + blueprints), SQLite via Flask-SQLAlchemy,
-Flask-Login, Flask-WTF (CSRF), vanilla JS (ES modules), and Tailwind CSS.
-
----
+Built with Flask, SQLite via Flask-SQLAlchemy, Flask-Login, Flask-WTF CSRF,
+vanilla JS modules, and Tailwind CSS.
 
 ## Features
 
-- Account register / login / logout (hashed passwords, CSRF on every form).
-- Film search + a full page per film (backdrop, poster, cast, synopsis,
-  director, runtime, TMDB rating). The backdrop fades smoothly into the page
-  and the poster overlaps it in a centred three-column layout.
-- **Clickable cast & director** → a **person page** (`/person/<id>`) showing
-  that person's filmography, photo, bio, a TMDB link, and a “you've watched
-  X of Y” progress stat. People are cached locally like films.
-- Watchlist add/remove (idempotent toggle).
-- Mark watched, rate (½–5 stars, half-star increments), log with a date,
-  rewatch flag, like, and write reviews (with optional spoiler flag).
-- **Favourite four**: pin up to 4 films to your profile (favourite from any
-  film page; remove from your own profile).
-- Public profiles: faded backdrop banner + avatar, stats strip, favourites,
-  recent activity (with rating/like overlays), reviews, plus a sidebar with a
-  watchlist preview, diary list and a ratings histogram. Tabs: Activity ·
-  Films · Diary · Reviews · Watchlist.
-- Per-account customisation via **Edit profile**: display name, bio, and
-  **uploaded** avatar / backdrop images (or paste a URL). You can also set your
-  profile backdrop straight from any film page.
-- All TMDB calls are proxied server-side; films and people are cached locally
-  in SQLite. Uploaded images live under `instance/uploads/` (gitignored).
-
----
-
-## Prerequisites
-
-- **Python 3.11+**
-- A free **TMDB API key** (v3): create an account at
-  <https://www.themoviedb.org/>, then go to **Settings → API** and request a
-  developer key. Copy the **API Key (v3 auth)** value.
-- *(Optional)* the **standalone Tailwind CLI** if you want to rebuild the CSS
-  (a pre-built `app/static/css/output.css` is already committed, so you can run
-  the app without it).
-
----
+- Account register, login, and logout with hashed passwords and CSRF.
+- Film search and film pages with backdrop, poster, cast, synopsis, director,
+  runtime, and TMDB rating.
+- Person pages for cast and directors, cached locally like films.
+- Watchlist toggle and favourite-four profile pins.
+- One-entry-per-watch logging: quick rating, like, review, and mark-watched
+  actions update the user's current entry for that film. Explicit "Log again"
+  creates a new `is_rewatch=True` diary entry.
+- Public profiles with film-sourced backdrops, avatar, stats, favourites,
+  activity, reviews, watchlist preview, diary preview, and ratings histogram.
+- Settings for display name, bio, uploaded avatar, and a backdrop chosen from
+  films the user has logged or watchlisted. Film pages can also set the profile
+  backdrop.
+- TMDB keys stay server-side. Films and people are cached locally in SQLite.
 
 ## Setup
 
-All commands are run from the `reellog/` directory. They work on
-Linux / macOS / Windows (PowerShell variations noted).
-
-### 1. Create and activate a virtual environment
+All commands run from the `reellog/` directory.
 
 ```bash
 python -m venv .venv
-# Linux/macOS:
-source .venv/bin/activate
-# Windows (PowerShell):
-.venv\Scripts\Activate.ps1
-```
-
-### 2. Install dependencies
-
-```bash
+.venv\Scripts\Activate.ps1  # Windows PowerShell
 pip install -r requirements.txt
+copy .env.example .env
 ```
 
-### 3. Configure environment variables
+Set `SECRET_KEY` and `TMDB_API_KEY` in `.env`. The app refuses to start if
+either is missing.
 
-```bash
-cp .env.example .env      # Windows: copy .env.example .env
-```
-
-Edit `.env` and set:
-
-- `SECRET_KEY` — a long random string. Generate one with:
-  ```bash
-  python -c "import secrets; print(secrets.token_hex(32))"
-  ```
-- `TMDB_API_KEY` — your TMDB v3 API key.
-
-The app **refuses to start** with a clear error if either is missing.
-
-### 4. Initialise the database
+Initialise the database:
 
 ```bash
 flask --app run init-db
 ```
 
-This creates `instance/app.db` with all tables. It is idempotent and never
-drops data — **re-run it after pulling** so the newer `people` and
-`favorite_films` tables are created (it only adds missing tables).
+The command imports all models before `db.create_all()`, so fresh clones create
+the `users`, `films`, `people`, `watchlist_items`, `favorite_films`, and
+`log_entries` tables. It is idempotent and never drops data.
 
-Uploaded avatars/backdrops are written to `instance/uploads/` (created on
-first upload). The whole `instance/` folder is gitignored.
-
-### 5. Run the app
+Run the app:
 
 ```bash
 flask --app run run --debug
-# or simply:
+# or
 python run.py
 ```
 
 Open <http://127.0.0.1:5000>.
 
----
+Uploaded avatars are written to `instance/uploads/`, which is gitignored.
+Profile backdrops are TMDB film backdrop URLs, not local uploads.
 
 ## Tailwind CSS
 
-A minified `app/static/css/output.css` is **committed**, so the app is fully
-styled out of the box (the default `TAILWIND_CDN=0` makes `base.html` load it).
+The committed `app/static/css/output.css` is used by default.
 
-### Rebuilding the CSS (only if you change templates/classes)
+Rebuild after changing templates, JS classes, or Tailwind tokens:
 
-1. Download the standalone Tailwind CLI (no Node project needed) from the
-   [Tailwind releases page](https://github.com/tailwindlabs/tailwindcss/releases),
-   pick the binary for your OS, e.g. on Linux:
-   ```bash
-   curl -sLo tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
-   chmod +x tailwindcss
-   ```
-   (Or use `npx tailwindcss …` if you prefer Node.)
-2. Build once:
-   ```bash
-   ./tailwindcss -c tailwind.config.js -i app/static/css/input.css -o app/static/css/output.css --minify
-   ```
-3. Or watch during development:
-   ```bash
-   ./tailwindcss -c tailwind.config.js -i app/static/css/input.css -o app/static/css/output.css --watch
-   ```
+```bash
+npx tailwindcss -c tailwind.config.js -i app/static/css/input.css -o app/static/css/output.css --minify
+```
 
-### First-run-only CDN alternative
-
-If you'd rather not deal with the CLI while iterating, set `TAILWIND_CDN=1` in
-`.env`. `base.html` will then load the **Tailwind Play CDN** plus
-`cdn-extras.css` (plain-CSS versions of our component classes). **Do not ship
-the CDN to production** — build `output.css` and leave `TAILWIND_CDN=0`.
-
----
+You can also use the standalone Tailwind CLI. During local first-run iteration,
+`TAILWIND_CDN=1` enables the Tailwind Play CDN plus `cdn-extras.css`; do not use
+the CDN for production.
 
 ## Tests
 
-A small pytest suite covers the key routes and the security-sensitive bits
-(person page with TMDB mocked, upload validation — oversized / wrong type /
-path-traversal filenames, the favourite-films cap, and profile actions). It
-runs against an in-memory SQLite DB and stubs out all network calls, so no
-TMDB key is needed.
+The pytest suite uses an in-memory SQLite database and mocks network-sensitive
+paths where needed.
 
 ```bash
-pip install pytest
 pytest -q
 ```
 
----
+Coverage includes page smoke tests, person pages, avatar upload validation,
+favourite limits, profile backdrop actions, and logging semantics:
 
-## Production hardening notes
+- Rate, like, and review the same film without rewatching creates exactly one
+  `LogEntry`.
+- Editing rating or review keeps one row and updates its values.
+- Explicit rewatch creates a second diary row ordered newest first.
 
-This project targets a small school deployment. Before exposing it publicly:
+## Logging Rules
 
-- Serve over **HTTPS** and set `SESSION_COOKIE_SECURE=1` in the environment.
-- Run behind a real WSGI server (e.g. `gunicorn 'run:app'`) — **not**
-  `flask run` / `debug=True`.
-- Set a strong, secret `SECRET_KEY`; never commit `.env`.
-- Set `TAILWIND_CDN=0` and ship the built `output.css` (no external CDN).
-- Put the app behind a reverse proxy (nginx) and consider rate-limiting auth
-  endpoints.
-- Back up `instance/app.db` regularly.
+- A film is watched when at least one `LogEntry` exists for `(user, film)`.
+- The current entry is the user's most recent `LogEntry` for that film.
+- Quick/default actions upsert the current entry.
+- Clearing a rating sets `rating = NULL` while keeping the entry.
+- Only the explicit "Log again" / rewatch path inserts another row.
+- Older development databases may already contain duplicate rows; delete those
+  manually or reset the local database if you want clean diary history.
 
----
+## Project Layout
 
-## Project layout
-
-```
+```text
 reellog/
-├── app/
-│   ├── __init__.py      # create_app() factory, CLI, error handlers
-│   ├── config.py        # env-driven config (fails fast on missing secrets)
-│   ├── extensions.py    # db, login_manager, csrf singletons
-│   ├── models.py        # User, Film, Person, WatchlistItem, LogEntry, FavoriteFilm
-│   ├── tmdb.py          # server-side TMDB client + caching + fallbacks
-│   ├── uploads.py       # avatar/backdrop image validation + processing (Pillow)
-│   ├── validators.py    # username/email/url/rating/date validation
-│   ├── auth/ films/ people/ users/ api/   # blueprints
-│   ├── templates/       # Jinja templates (base, partials, pages, errors)
-│   └── static/          # css (input/output), js (api/main/search/film/profile), img
-├── instance/            # app.db + uploads/ live here (gitignored)
-├── requirements.txt  .env.example  .gitignore  tailwind.config.js  run.py
-└── README.md
+  app/
+    __init__.py      # app factory, CLI, error handlers
+    config.py        # env-driven config
+    extensions.py    # db, login_manager, csrf
+    models.py        # User, Film, Person, WatchlistItem, LogEntry, FavoriteFilm
+    tmdb.py          # server-side TMDB client and caching
+    uploads.py       # avatar image validation and processing
+    validators.py    # username, email, url, rating, date validation
+    auth/ films/ people/ users/ api/
+    templates/
+    static/
+  instance/          # app.db and uploads, gitignored
+  requirements.txt
+  tailwind.config.js
+  run.py
 ```
 
-### Key design decisions
+## Production Notes
 
-- **Ratings stored as integers 1–10** (each = half a star). Converted to
-  0.5–5.0 only at the display/input edge — no float precision bugs.
-- **A film is "watched"** iff ≥1 `LogEntry` exists; **current rating** = the
-  most recent rated log. "Mark watched" / quick-rate create a dated `LogEntry`.
-- **Films are cached locally** so foreign keys are stable and we don't hammer
-  TMDB; entries refresh after 7 days. TMDB outages/404/429 degrade gracefully
-  (serve cache, friendly 404, empty states) — never a 500 stack trace.
-- **CSRF everywhere**: forms include a hidden token; JS `fetch` sends it via the
-  `X-CSRFToken` header (read from a `<meta>` tag) — see `static/js/api.js`.
-- **No `innerHTML` with raw data**: the live-search dropdown builds nodes with
-  `textContent`, so external titles can't inject markup. Jinja autoescaping
-  covers server-rendered user content.
-- **Reserved usernames** (`api`, `film`, `search`, `settings`, …) can't be
-  registered, so they never shadow the catch-all `/<username>` route.
-
----
-
-## Known limitations
-
-- "Today" uses the **server's** local date for the future-date check; there's
-  no per-user timezone handling (kept intentionally simple).
-- Search exposes page-based pagination (Previous/Next), not infinite scroll.
-- The quick-rate widget on the film page always creates a **new** dated diary
-  entry; to change or clear a rating, edit/delete a specific entry.
-- No email verification or password reset flow.
-- TMDB image sizes are fixed per context (no responsive `srcset`).
-
-## Next features (nice-to-haves)
-
-1. **Lists** — user-curated film lists (ranked or unranked), public/private.
-2. **Following / friends activity feed** — see what classmates logged recently.
-3. **Likes & comments on reviews** — lightweight social interaction.
-4. **Year-in-review stats** — films/hours watched, top directors, rating
-   distribution.
-```
+- Serve over HTTPS and set secure cookie options.
+- Run behind a real WSGI server, not the Flask debug server.
+- Keep `SECRET_KEY` and `TMDB_API_KEY` out of git.
+- Build and commit `output.css` with `TAILWIND_CDN=0`.
+- Back up `instance/app.db` regularly.

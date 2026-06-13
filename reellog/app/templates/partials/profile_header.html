@@ -16,7 +16,7 @@
     <div class="absolute inset-0 bg-gradient-to-b from-bg/40 to-transparent"></div>
   </div>
 
-  <div class="relative z-10 mx-auto max-w-[1100px] px-4">
+  <div class="relative z-10 mx-auto max-w-shell px-4">
     <div class="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
       <div class="flex items-end gap-4">
         {{ avatar(user, "h-24 w-24 border-4 border-bg", "text-3xl") }}
@@ -45,6 +45,7 @@
           <dd class="font-title text-2xl font-semibold leading-none">{{ value }}</dd>
           <dt class="mt-1 text-xs uppercase tracking-widest text-text-mute">{{ label }}</dt>
         </div>
+        {% if not loop.last %}<div class="h-8 w-px bg-line"></div>{% endif %}
       {% endfor %}
     </dl>
 

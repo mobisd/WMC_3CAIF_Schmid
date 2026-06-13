@@ -5,15 +5,21 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bg: "#0B0C0E",
-        surface: "#15171B",
-        "surface-2": "#1E2127",
-        border: "#2A2E37",
-        text: "#ECEDEE",
-        "text-dim": "#9BA1AC",
-        "text-mute": "#5C626D",
-        accent: "#D9A441", // amber: stars, focus, single primary action
-        like: "#E0567B", // rose: the "like" heart
+        bg: "#0D0E10",
+        ink: "#ECEAE4",
+        dim: "rgba(236,234,228,.55)",
+        mute: "rgba(236,234,228,.34)",
+        line: "rgba(236,234,228,.10)",
+        gold: "#E5A94E",
+        rose: "#F26A8D",
+        surface: "#111317",
+        "surface-2": "#17191E",
+        border: "rgba(236,234,228,.10)",
+        text: "#ECEAE4",
+        "text-dim": "rgba(236,234,228,.55)",
+        "text-mute": "rgba(236,234,228,.34)",
+        accent: "#E5A94E",
+        like: "#F26A8D",
       },
       fontFamily: {
         // Serif for editorial film titles/headings; Inter for body/UI.
@@ -22,6 +28,7 @@ module.exports = {
       },
       maxWidth: {
         content: "1180px",
+        shell: "1040px",
       },
       transitionDuration: {
         175: "175ms",
