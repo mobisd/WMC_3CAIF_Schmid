@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom design tokens as CSS variables (mirror tailwind.config.js) so we can
+   reference them in raw CSS where Tailwind utilities are awkward. */
+:root {
+  --accent: #d9a441;
+  --like: #e0567b;
+}
+
+/* Small, genuinely-reusable component classes. Don't over-abstract. */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2
+      text-sm font-medium transition-colors duration-175
+      focus-visible:outline-none focus-visible:ring-2
+      focus-visible:ring-accent focus-visible:ring-offset-2
+      focus-visible:ring-offset-bg disabled:opacity-50
+      disabled:cursor-not-allowed;
+  }
+  /* One solid primary (neutral/white), used sparingly. */
+  .btn-primary {
+    @apply btn bg-text text-bg hover:bg-white;
+  }
+  .btn-ghost {
+    @apply btn border border-border bg-transparent text-text
+      hover:bg-surface-2;
+  }
+  .btn-accent {
+    @apply btn bg-accent text-bg hover:brightness-110;
+  }
+
+  .input {
+    @apply w-full rounded-md border border-border bg-surface px-3 py-2
+      text-sm text-text placeholder-text-mute transition-colors duration-175
+      focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent;
+  }
+
+  .card {
+    @apply rounded-lg border border-border bg-surface;
+  }
+
+  .label {
+    @apply mb-1 block text-sm font-medium text-text-dim;
+  }
+
+  /* Poster grid: ~2:3, auto-fill, subtle hover lift + accent ring. */
+  .poster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  .poster {
+    @apply relative block overflow-hidden rounded-lg border border-border
+      bg-surface-2 transition duration-175;
+    aspect-ratio: 2 / 3;
+  }
+  .poster:hover {
+    @apply -translate-y-1 ring-1 ring-accent/60;
+  }
+  .poster img {
+    @apply h-full w-full object-cover;
+  }
+}
+
+/* Editorial film titles. */
+.font-title {
+  font-family: "Fraunces", Georgia, serif;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+/* Backdrop hero gradient: keeps overlaid text legible. */
+.hero-gradient {
+  background-image: linear-gradient(
+    to top,
+    var(--tw-gradient-from, #0b0c0e) 0%,
+    rgba(11, 12, 14, 0.7) 45%,
+    rgba(11, 12, 14, 0.2) 100%
+  );
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  .poster:hover {
+    transform: none;
+  }
+}

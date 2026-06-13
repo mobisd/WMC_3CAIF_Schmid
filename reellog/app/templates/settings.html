@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Settings — ReelLog{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-2xl">
+    <h1 class="mb-6 font-title text-3xl font-bold">Settings</h1>
+
+    {# --- Profile / customisation --------------------------------------- #}
+    <form method="post" action="{{ url_for('users.settings') }}" class="card space-y-4 p-6">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <input type="hidden" name="form_type" value="profile" />
+      <h2 class="font-title text-xl font-semibold">Profile</h2>
+
+      <div>
+        <label class="label" for="display_name">Display name</label>
+        <input class="input" id="display_name" name="display_name" maxlength="80" value="{{ user.display_name or '' }}" />
+      </div>
+
+      <div>
+        <label class="label" for="bio">Bio</label>
+        <textarea class="input" id="bio" name="bio" rows="3" maxlength="500">{{ user.bio or '' }}</textarea>
+      </div>
+
+      <div>
+        <label class="label" for="avatar_url">Avatar image URL</label>
+        <input class="input" id="avatar_url" name="avatar_url" type="url" maxlength="500" value="{{ user.avatar_url or '' }}" placeholder="https://…" />
+        <p class="mt-1 text-xs text-text-mute">Your profile “poster”. Paste any http(s) image URL.</p>
+      </div>
+
+      <div>
+        <label class="label" for="backdrop_url">Profile backdrop URL</label>
+        <input class="input" id="backdrop_url" name="backdrop_url" type="url" maxlength="500" value="{{ user.backdrop_url or '' }}" placeholder="https://…" />
+        <p class="mt-1 text-xs text-text-mute">Banner shown at the top of your profile.</p>
+      </div>
+
+      <button type="submit" class="btn-primary">Save profile</button>
+    </form>
+
+    {# --- Change password ----------------------------------------------- #}
+    <form method="post" action="{{ url_for('users.settings') }}" class="card mt-6 space-y-4 p-6">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <input type="hidden" name="form_type" value="password" />
+      <h2 class="font-title text-xl font-semibold">Change password</h2>
+
+      <div>
+        <label class="label" for="current_password">Current password</label>
+        <input class="input" id="current_password" name="current_password" type="password" autocomplete="current-password" required />
+      </div>
+      <div>
+        <label class="label" for="new_password">New password</label>
+        <input class="input" id="new_password" name="new_password" type="password" minlength="8" autocomplete="new-password" required />
+      </div>
+      <div>
+        <label class="label" for="confirm_password">Confirm new password</label>
+        <input class="input" id="confirm_password" name="confirm_password" type="password" minlength="8" autocomplete="new-password" required />
+      </div>
+
+      <button type="submit" class="btn-ghost">Change password</button>
+    </form>
+  </div>
+{% endblock %}
