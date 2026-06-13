@@ -13,14 +13,25 @@ Flask-Login, Flask-WTF (CSRF), vanilla JS (ES modules), and Tailwind CSS.
 
 - Account register / login / logout (hashed passwords, CSRF on every form).
 - Film search + a full page per film (backdrop, poster, cast, synopsis,
-  director, runtime, TMDB rating).
+  director, runtime, TMDB rating). The backdrop fades smoothly into the page
+  and the poster overlaps it in a centred three-column layout.
+- **Clickable cast & director** → a **person page** (`/person/<id>`) showing
+  that person's filmography, photo, bio, a TMDB link, and a “you've watched
+  X of Y” progress stat. People are cached locally like films.
 - Watchlist add/remove (idempotent toggle).
 - Mark watched, rate (½–5 stars, half-star increments), log with a date,
   rewatch flag, like, and write reviews (with optional spoiler flag).
-- Public profiles: banner + avatar, stats, activity, diary, watchlist, reviews.
-- Per-account customisation: display name, bio, avatar URL, backdrop URL,
-  change password.
-- All TMDB calls are proxied server-side; films are cached locally in SQLite.
+- **Favourite four**: pin up to 4 films to your profile (favourite from any
+  film page; remove from your own profile).
+- Public profiles: faded backdrop banner + avatar, stats strip, favourites,
+  recent activity (with rating/like overlays), reviews, plus a sidebar with a
+  watchlist preview, diary list and a ratings histogram. Tabs: Activity ·
+  Films · Diary · Reviews · Watchlist.
+- Per-account customisation via **Edit profile**: display name, bio, and
+  **uploaded** avatar / backdrop images (or paste a URL). You can also set your
+  profile backdrop straight from any film page.
+- All TMDB calls are proxied server-side; films and people are cached locally
+  in SQLite. Uploaded images live under `instance/uploads/` (gitignored).
 
 ---
 
@@ -80,7 +91,11 @@ flask --app run init-db
 ```
 
 This creates `instance/app.db` with all tables. It is idempotent and never
-drops data.
+drops data — **re-run it after pulling** so the newer `people` and
+`favorite_films` tables are created (it only adds missing tables).
+
+Uploaded avatars/backdrops are written to `instance/uploads/` (created on
+first upload). The whole `instance/` folder is gitignored.
 
 ### 5. Run the app
 
@@ -127,6 +142,21 @@ the CDN to production** — build `output.css` and leave `TAILWIND_CDN=0`.
 
 ---
 
+## Tests
+
+A small pytest suite covers the key routes and the security-sensitive bits
+(person page with TMDB mocked, upload validation — oversized / wrong type /
+path-traversal filenames, the favourite-films cap, and profile actions). It
+runs against an in-memory SQLite DB and stubs out all network calls, so no
+TMDB key is needed.
+
+```bash
+pip install pytest
+pytest -q
+```
+
+---
+
 ## Production hardening notes
 
 This project targets a small school deployment. Before exposing it publicly:
@@ -150,13 +180,14 @@ reellog/
 │   ├── __init__.py      # create_app() factory, CLI, error handlers
 │   ├── config.py        # env-driven config (fails fast on missing secrets)
 │   ├── extensions.py    # db, login_manager, csrf singletons
-│   ├── models.py        # User, Film, WatchlistItem, LogEntry
+│   ├── models.py        # User, Film, Person, WatchlistItem, LogEntry, FavoriteFilm
 │   ├── tmdb.py          # server-side TMDB client + caching + fallbacks
+│   ├── uploads.py       # avatar/backdrop image validation + processing (Pillow)
 │   ├── validators.py    # username/email/url/rating/date validation
-│   ├── auth/ films/ users/ api/   # blueprints
+│   ├── auth/ films/ people/ users/ api/   # blueprints
 │   ├── templates/       # Jinja templates (base, partials, pages, errors)
-│   └── static/          # css (input/output), js (api/main/search/film), img
-├── instance/            # app.db lives here (gitignored)
+│   └── static/          # css (input/output), js (api/main/search/film/profile), img
+├── instance/            # app.db + uploads/ live here (gitignored)
 ├── requirements.txt  .env.example  .gitignore  tailwind.config.js  run.py
 └── README.md
 ```
@@ -195,7 +226,6 @@ reellog/
 1. **Lists** — user-curated film lists (ranked or unranked), public/private.
 2. **Following / friends activity feed** — see what classmates logged recently.
 3. **Likes & comments on reviews** — lightweight social interaction.
-4. **"Favourite four"** films pinned on the profile (Letterboxd-style).
-5. **Year-in-review stats** — films/hours watched, top directors, rating
+4. **Year-in-review stats** — films/hours watched, top directors, rating
    distribution.
 ```

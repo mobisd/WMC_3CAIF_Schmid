@@ -1,4 +1,5 @@
 {# Sticky slim top nav: serif wordmark · live search · profile menu. #}
+{% from "partials/macros.html" import avatar %}
 <header
   class="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur"
 >
@@ -51,18 +52,7 @@
           <summary
             class="flex cursor-pointer list-none items-center gap-2 rounded-md px-2 py-1 hover:bg-surface-2"
           >
-            {% if current_user.avatar_url %}
-              <img
-                src="{{ current_user.avatar_url }}"
-                alt=""
-                class="h-7 w-7 rounded-full border border-border object-cover"
-              />
-            {% else %}
-              <span
-                class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold text-text-dim"
-                >{{ current_user.name[0]|upper }}</span
-              >
-            {% endif %}
+            {{ avatar(current_user, "h-7 w-7", "text-xs") }}
             <span class="hidden text-sm sm:inline">{{ current_user.name }}</span>
           </summary>
           <div

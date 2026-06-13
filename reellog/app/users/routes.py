@@ -20,7 +20,8 @@ from sqlalchemy.orm import joinedload
 
 from ..config import Config
 from ..extensions import db
-from ..models import LogEntry, User, WatchlistItem
+from ..models import FavoriteFilm, LogEntry, User, WatchlistItem
+from ..uploads import UploadError, delete_upload, save_image
 from ..validators import normalise_username, password_error, url_error
 
 users_bp = Blueprint("users", __name__)
@@ -51,14 +52,71 @@ def profile(username: str):
             LogEntry.query.options(joinedload(LogEntry.film))
             .filter(LogEntry.user_id == user.id, LogEntry.review.isnot(None))
             .order_by(LogEntry.created_at.desc())
-            .limit(10)
+            .limit(6)
             .all()
         )
         if log.has_review
     ]
-    return render_template(
-        "profile.html", user=user, recent_logs=recent_logs, reviews=reviews
+
+    favorites = (
+        FavoriteFilm.query.options(joinedload(FavoriteFilm.film))
+        .filter_by(user_id=user.id)
+        .order_by(FavoriteFilm.position.asc())
+        .all()
     )
+
+    # Sidebar previews.
+    watchlist_preview = (
+        WatchlistItem.query.options(joinedload(WatchlistItem.film))
+        .filter_by(user_id=user.id)
+        .order_by(WatchlistItem.added_at.desc())
+        .limit(5)
+        .all()
+    )
+    diary_preview = (
+        LogEntry.query.options(joinedload(LogEntry.film))
+        .filter(LogEntry.user_id == user.id, LogEntry.watched_on.isnot(None))
+        .order_by(LogEntry.watched_on.desc(), LogEntry.created_at.desc())
+        .limit(6)
+        .all()
+    )
+
+    # Ratings histogram: counts of ratings 1..10 (½..5 stars) across all logs.
+    histogram = [0] * 10
+    for log in user.logs:
+        if log.rating:
+            histogram[log.rating - 1] += 1
+
+    return render_template(
+        "profile.html",
+        user=user,
+        recent_logs=recent_logs,
+        reviews=reviews,
+        favorites=favorites,
+        watchlist_preview=watchlist_preview,
+        diary_preview=diary_preview,
+        histogram=histogram,
+        max_favorites=Config.MAX_FAVORITE_FILMS,
+    )
+
+
+@users_bp.route("/<username>/films")
+def films(username: str):
+    user = _get_user_or_404(username)
+    # All distinct films the user has logged, most-recently-logged first.
+    logs = (
+        LogEntry.query.options(joinedload(LogEntry.film))
+        .filter_by(user_id=user.id)
+        .order_by(LogEntry.created_at.desc())
+        .all()
+    )
+    seen: set[int] = set()
+    films = []
+    for log in logs:
+        if log.film_id not in seen:
+            seen.add(log.film_id)
+            films.append(log.film)
+    return render_template("films.html", user=user, films=films)
 
 
 @users_bp.route("/<username>/diary")
@@ -102,21 +160,55 @@ def settings():
     return render_template("settings.html", user=current_user)
 
 
+def _resolve_image_field(field: str, label: str, current, errors: list):
+    """Work out the new value for avatar_url / backdrop_url from the form.
+
+    Precedence: an explicit "remove" checkbox wins, then an uploaded file,
+    then a pasted URL; otherwise the current value is kept. Old uploads are
+    cleaned up when replaced/removed. Validation errors are appended to
+    ``errors`` and the current value is preserved.
+    """
+    if request.form.get(f"remove_{field}"):
+        delete_upload(current)
+        return None
+
+    uploaded = request.files.get(f"{field}_file")
+    if uploaded and uploaded.filename:
+        try:
+            new_url = save_image(uploaded, field)
+        except UploadError as exc:
+            errors.append(f"{label}: {exc}")
+            return current
+        delete_upload(current)
+        return new_url
+
+    pasted = request.form.get(f"{field}_url", "").strip()
+    if pasted:
+        err = url_error(pasted, Config.URL_MAX_LEN)
+        if err:
+            errors.append(f"{label} {err}")
+            return current
+        if current != pasted:
+            delete_upload(current)
+        return pasted
+
+    return current
+
+
 def _handle_profile_update():
     display_name = request.form.get("display_name", "").strip() or None
     bio = request.form.get("bio", "").strip() or None
-    avatar_url = request.form.get("avatar_url", "").strip() or None
-    backdrop_url = request.form.get("backdrop_url", "").strip() or None
 
     errors = []
     if bio and len(bio) > Config.BIO_MAX_LEN:
         errors.append(f"Bio is too long (max {Config.BIO_MAX_LEN} characters).")
     if display_name and len(display_name) > 80:
         errors.append("Display name is too long (max 80 characters).")
-    for label, value in (("Avatar", avatar_url), ("Backdrop", backdrop_url)):
-        err = url_error(value or "", Config.URL_MAX_LEN)
-        if err:
-            errors.append(f"{label} {err}")
+
+    new_avatar = _resolve_image_field("avatar", "Avatar", current_user.avatar_url, errors)
+    new_backdrop = _resolve_image_field(
+        "backdrop", "Backdrop", current_user.backdrop_url, errors
+    )
 
     if errors:
         for e in errors:
@@ -125,8 +217,8 @@ def _handle_profile_update():
 
     current_user.display_name = display_name
     current_user.bio = bio
-    current_user.avatar_url = avatar_url
-    current_user.backdrop_url = backdrop_url
+    current_user.avatar_url = new_avatar
+    current_user.backdrop_url = new_backdrop
     db.session.commit()
     flash("Profile updated.", "success")
     return redirect(url_for("users.settings"))

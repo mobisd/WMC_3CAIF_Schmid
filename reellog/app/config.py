@@ -67,3 +67,13 @@ class Config:
     REVIEW_MAX_LEN = 5000
     BIO_MAX_LEN = 500
     URL_MAX_LEN = 500
+    MAX_FAVORITE_FILMS = 4  # Letterboxd-style "favourite four"
+
+    # --- Uploads (avatar / profile backdrop) -----------------------------
+    # Stored under instance/uploads (gitignored) and served via /uploads/<f>.
+    UPLOAD_DIR = str(INSTANCE_DIR / "uploads")
+    UPLOAD_MAX_BYTES = 5 * 1024 * 1024  # 5 MB per image
+    ALLOWED_IMAGE_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+    # Reject the whole request a little above the per-image cap (multipart
+    # overhead) so a giant upload can't exhaust memory before we validate.
+    MAX_CONTENT_LENGTH = 6 * 1024 * 1024

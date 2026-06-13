@@ -6,7 +6,7 @@ import time, which makes testing and multiple instances clean.
 from __future__ import annotations
 
 import click
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 
 from .config import Config
 from .extensions import csrf, db, login_manager
@@ -28,14 +28,23 @@ def create_app(config_class: type = Config) -> Flask:
     from .api.routes import api_bp
     from .auth.routes import auth_bp
     from .films.routes import films_bp
+    from .people.routes import people_bp
     from .users.routes import users_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(films_bp)
+    app.register_blueprint(people_bp)
     app.register_blueprint(api_bp, url_prefix="/api")
     # users_bp last: it owns the catch-all /<username> route, so more specific
     # routes (login, search, film, ...) must be registered before it.
     app.register_blueprint(users_bp)
+
+    # Serve user-uploaded avatars/backdrops from the (gitignored) upload dir.
+    # send_from_directory is safe against path traversal; stored names are
+    # server-generated uuids anyway.
+    @app.route("/uploads/<path:filename>")
+    def uploads(filename):
+        return send_from_directory(app.config["UPLOAD_DIR"], filename)
 
     _register_error_handlers(app)
     _register_cli(app)
@@ -56,6 +65,15 @@ def _register_error_handlers(app: Flask) -> None:
     @app.errorhandler(500)
     def server_error(_err):
         return render_template("errors/500.html"), 500
+
+    @app.errorhandler(413)
+    def too_large(_err):
+        # Triggered by MAX_CONTENT_LENGTH (e.g. an oversized upload).
+        from flask import flash, redirect, request, url_for
+
+        flash("That upload is too large (max 5 MB).", "error")
+        # Prefer bouncing back to settings; fall back to the referrer.
+        return redirect(request.referrer or url_for("users.settings")), 303
 
 
 def _register_cli(app: Flask) -> None:

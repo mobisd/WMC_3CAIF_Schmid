@@ -1,5 +1,34 @@
 {# Reusable bits. Kept small and explicit rather than over-abstracted. #}
 
+{# Small uppercase, letter-spaced section label with an optional right-aligned
+   "MORE →" link. Heads every section so the layout reads as intentional. #}
+{% macro section_label(text, more_href=None, more_text="More") %}
+  <div class="flex items-baseline justify-between gap-3">
+    <h2 class="text-xs font-semibold uppercase tracking-widest text-text-mute">{{ text }}</h2>
+    {% if more_href %}
+      <a href="{{ more_href }}" class="text-xs uppercase tracking-wider text-text-mute hover:text-accent">{{ more_text }} →</a>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{# Avatar / monogram component used everywhere (nav, profile, reviews).
+   When no avatar is set it renders a clean circular monogram: a solid circle
+   in surface-2 with the user's initial centred (leading-none avoids clipping). #}
+{% macro avatar(user, size_class="h-10 w-10", text_class="text-base") %}
+  {% if user.avatar_url %}
+    <img
+      src="{{ user.avatar_url }}"
+      alt="{{ user.name }}"
+      class="{{ size_class }} shrink-0 rounded-full object-cover ring-1 ring-white/10"
+    />
+  {% else %}
+    <span
+      class="{{ size_class }} {{ text_class }} flex shrink-0 select-none items-center justify-center rounded-full bg-surface-2 font-semibold leading-none text-text-dim ring-1 ring-white/10"
+      aria-hidden="true"
+    >{{ user.name[0]|upper }}</span>
+  {% endif %}
+{% endmacro %}
+
 {# A poster tile linking to the film page. Accepts a dict with tmdb_id, title,
    release_year, poster_path (the shape used by search/trending results). #}
 {% macro poster_card(item) %}
@@ -28,14 +57,22 @@
   </a>
 {% endmacro %}
 
-{# A poster tile from a Film model instance (uses its url helpers). #}
-{% macro film_poster(film) %}
+{# A poster tile from a Film model instance (uses its url helpers). Pass a
+   rating (int 1..10) and/or liked=True to show the user's stars + like heart
+   as a gradient overlay along the bottom edge (used on activity grids). #}
+{% macro film_poster(film, rating=None, liked=False) %}
   <a
     href="{{ url_for('films.film', tmdb_id=film.tmdb_id) }}"
     class="poster group"
     aria-label="{{ film.title }}{% if film.release_year %} ({{ film.release_year }}){% endif %}"
   >
     <img src="{{ film.poster_url('w342') }}" alt="{{ film.title }} poster" loading="lazy" />
+    {% if rating or liked %}
+      <span class="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/80 to-transparent px-2 pb-1 pt-4 text-xs">
+        {{ stars_display(rating) }}
+        {% if liked %}<span class="text-like">♥</span>{% endif %}
+      </span>
+    {% endif %}
     <span
       class="absolute inset-x-0 bottom-0 hidden bg-bg/85 px-2 py-1 text-xs text-text-dim group-hover:block"
       >{{ film.title }}{% if film.release_year %} · {{ film.release_year }}{% endif %}</span
@@ -53,6 +90,23 @@
       {%- if half %}½{% endif -%}
     </span>
   {% endif %}
+{% endmacro %}
+
+{# Ratings histogram: 10 thin vertical bars (½..5 stars) in the amber accent on
+   a faint baseline. `counts` is a list of 10 ints (index 0 => ½ star, 9 => 5).
+   Reused on the profile and could sit on the film page. #}
+{% macro ratings_histogram(counts) %}
+  {% set peak = counts|max %}
+  <div class="flex items-end gap-1" aria-hidden="true">
+    {% for c in counts %}
+      <div class="flex flex-1 items-end" style="height:2.5rem">
+        <div
+          class="w-full rounded-sm bg-accent/70"
+          style="height: {{ ((c / peak * 100) if peak else 0)|round(1) }}%; min-height: {{ '2px' if c else '0' }}"
+        ></div>
+      </div>
+    {% endfor %}
+  </div>
 {% endmacro %}
 
 {# Empty-state block: a short line + subtle icon. #}

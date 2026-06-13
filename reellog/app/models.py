@@ -50,6 +50,12 @@ class User(UserMixin, db.Model):
         cascade="all, delete-orphan",
         order_by="WatchlistItem.added_at.desc()",
     )
+    favorites = db.relationship(
+        "FavoriteFilm",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="FavoriteFilm.position.asc()",
+    )
 
     # --- password helpers (never store or return plaintext) --------------
     def set_password(self, password: str) -> None:
@@ -82,6 +88,13 @@ class User(UserMixin, db.Model):
     @property
     def review_count(self) -> int:
         return sum(1 for log in self.logs if (log.review or "").strip())
+
+    @property
+    def watchlist_count(self) -> int:
+        return len(self.watchlist)
+
+    def is_favorite(self, film_id: int) -> bool:
+        return any(fav.film_id == film_id for fav in self.favorites)
 
     def rating_for(self, film_id: int):
         """Most recent rating (int 1..10) the user gave this film, or None."""
@@ -143,6 +156,37 @@ class Film(db.Model):
         return age_days >= current_app.config["TMDB_CACHE_DAYS"]
 
 
+class Person(db.Model):
+    """Local cache of a TMDB person (actor/director), mirroring Film.
+
+    Lets the person page survive TMDB outages and keeps it off the hot path.
+    The filmography itself is not cached — it's rendered from the live (or
+    last-fetched) TMDB response — but the person's identity/bio is.
+    """
+
+    __tablename__ = "people"
+
+    tmdb_id = db.Column(db.Integer, primary_key=True)  # from TMDB
+    name = db.Column(db.String(200), nullable=False)
+    profile_path = db.Column(db.String(255), nullable=True)
+    biography = db.Column(db.Text, nullable=True)
+    known_for_department = db.Column(db.String(80), nullable=True)
+    cached_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def profile_url(self, size: str = "w300") -> str:
+        from flask import url_for
+
+        if self.profile_path:
+            base = current_app.config["TMDB_IMAGE_BASE"]
+            return f"{base}/{size}{self.profile_path}"
+        return url_for("static", filename="img/person-fallback.svg")
+
+    @property
+    def is_stale(self) -> bool:
+        age_days = (datetime.utcnow() - self.cached_at).days
+        return age_days >= current_app.config["TMDB_CACHE_DAYS"]
+
+
 class WatchlistItem(db.Model):
     __tablename__ = "watchlist_items"
     __table_args__ = (
@@ -156,6 +200,28 @@ class WatchlistItem(db.Model):
 
     user = db.relationship("User", back_populates="watchlist")
     film = db.relationship("Film", back_populates="watchlist_items")
+
+
+class FavoriteFilm(db.Model):
+    """A user's pinned 'favourite four' films (Letterboxd-style).
+
+    Capped at 4 per user — the cap is enforced in the API layer. `position`
+    keeps a stable display order.
+    """
+
+    __tablename__ = "favorite_films"
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "film_id", name="uq_fav_user_film"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    film_id = db.Column(db.Integer, db.ForeignKey("films.tmdb_id"), nullable=False)
+    position = db.Column(db.Integer, nullable=False, default=0)
+    added_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship("User", back_populates="favorites")
+    film = db.relationship("Film")
 
 
 class LogEntry(db.Model):

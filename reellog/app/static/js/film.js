@@ -100,6 +100,39 @@ if (panel) {
     }
   });
 
+  // --- favourite toggle ----------------------------------------------------
+  const favBtn = panel.querySelector('[data-action="toggle-favorite"]');
+  const favLabel = panel.querySelector("[data-favorite-label]");
+  favBtn?.addEventListener("click", async () => {
+    favBtn.disabled = true;
+    try {
+      const data = await api.post("/api/favorites/toggle", { tmdb_id: tmdbId });
+      const fav = data.is_favorite;
+      favLabel.textContent = fav ? "★ In your favourites" : "☆ Add to favourites";
+      favBtn.setAttribute("aria-pressed", fav ? "true" : "false");
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      favBtn.disabled = false;
+    }
+  });
+
+  // --- set profile backdrop from this film ---------------------------------
+  const backdropBtn = panel.querySelector('[data-action="set-backdrop"]');
+  backdropBtn?.addEventListener("click", async () => {
+    backdropBtn.disabled = true;
+    const original = backdropBtn.textContent;
+    try {
+      await api.post("/api/profile/backdrop", { tmdb_id: tmdbId });
+      backdropBtn.textContent = "Profile backdrop updated ✓";
+    } catch (err) {
+      alert(err.message);
+      backdropBtn.textContent = original;
+    } finally {
+      backdropBtn.disabled = false;
+    }
+  });
+
   // --- quick-rate widget (panel) -------------------------------------------
   const panelStars = panel.querySelector("[data-star-widget]");
   const ratingText = panel.querySelector("[data-rating-text]");

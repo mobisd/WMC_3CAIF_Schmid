@@ -52,12 +52,12 @@
     gap: 1rem;
   }
   .poster {
-    @apply relative block overflow-hidden rounded-lg border border-border
-      bg-surface-2 transition duration-175;
+    @apply relative block overflow-hidden rounded-md bg-surface-2
+      ring-1 ring-white/5 transition duration-175;
     aspect-ratio: 2 / 3;
   }
   .poster:hover {
-    @apply -translate-y-1 ring-1 ring-accent/60;
+    @apply -translate-y-0.5 ring-accent/50;
   }
   .poster img {
     @apply h-full w-full object-cover;

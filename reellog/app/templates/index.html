@@ -24,13 +24,7 @@
       <h2 class="mb-4 font-title text-2xl font-semibold">Your recent activity</h2>
       <div class="poster-grid">
         {% for log in recent_logs %}
-          <div>
-            {{ film_poster(log.film) }}
-            <div class="mt-1 flex items-center justify-between text-xs text-text-mute">
-              {{ stars_display(log.rating) }}
-              {% if log.liked %}<span class="text-like" aria-label="liked">♥</span>{% endif %}
-            </div>
-          </div>
+          {{ film_poster(log.film, log.rating, log.liked) }}
         {% endfor %}
       </div>
       <a

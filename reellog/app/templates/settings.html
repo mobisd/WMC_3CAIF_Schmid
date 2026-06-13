@@ -1,12 +1,15 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import avatar %}
 {% block title %}Settings — ReelLog{% endblock %}
 
 {% block content %}
   <div class="mx-auto max-w-2xl">
     <h1 class="mb-6 font-title text-3xl font-bold">Settings</h1>
 
-    {# --- Profile / customisation --------------------------------------- #}
-    <form method="post" action="{{ url_for('users.settings') }}" class="card space-y-4 p-6">
+    {# --- Profile / customisation ---------------------------------------
+       enctype is multipart so we can accept image uploads. Each image can be
+       uploaded, replaced with a pasted URL, or removed. #}
+    <form method="post" action="{{ url_for('users.settings') }}" enctype="multipart/form-data" class="card space-y-5 p-6">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <input type="hidden" name="form_type" value="profile" />
       <h2 class="font-title text-xl font-semibold">Profile</h2>
@@ -21,16 +24,40 @@
         <textarea class="input" id="bio" name="bio" rows="3" maxlength="500">{{ user.bio or '' }}</textarea>
       </div>
 
+      {# --- Avatar --------------------------------------------------------- #}
       <div>
-        <label class="label" for="avatar_url">Avatar image URL</label>
-        <input class="input" id="avatar_url" name="avatar_url" type="url" maxlength="500" value="{{ user.avatar_url or '' }}" placeholder="https://…" />
-        <p class="mt-1 text-xs text-text-mute">Your profile “poster”. Paste any http(s) image URL.</p>
+        <span class="label">Avatar</span>
+        <div class="flex items-center gap-4">
+          {{ avatar(user, "h-16 w-16", "text-2xl") }}
+          <div class="min-w-0 flex-1">
+            <input class="input" id="avatar_file" name="avatar_file" type="file" accept="image/jpeg,image/png,image/webp" />
+            <p class="mt-1 text-xs text-text-mute">Upload a JPEG, PNG or WEBP (max 5 MB). It’ll be cropped to a square.</p>
+            {% if user.avatar_url %}
+              <label class="mt-2 flex items-center gap-2 text-xs text-text-mute"><input type="checkbox" name="remove_avatar" class="accent-like" /> Remove current avatar</label>
+            {% endif %}
+          </div>
+        </div>
+        <details class="mt-2">
+          <summary class="cursor-pointer text-xs text-text-mute hover:text-text">…or paste an image URL instead</summary>
+          <input class="input mt-2" id="avatar_url" name="avatar_url" type="url" maxlength="500" placeholder="https://…" />
+        </details>
       </div>
 
+      {# --- Backdrop ------------------------------------------------------- #}
       <div>
-        <label class="label" for="backdrop_url">Profile backdrop URL</label>
-        <input class="input" id="backdrop_url" name="backdrop_url" type="url" maxlength="500" value="{{ user.backdrop_url or '' }}" placeholder="https://…" />
-        <p class="mt-1 text-xs text-text-mute">Banner shown at the top of your profile.</p>
+        <span class="label">Profile backdrop</span>
+        {% if user.backdrop_url %}
+          <img src="{{ user.backdrop_url }}" alt="Current backdrop" class="mb-2 h-24 w-full rounded-md object-cover ring-1 ring-white/10" />
+        {% endif %}
+        <input class="input" id="backdrop_file" name="backdrop_file" type="file" accept="image/jpeg,image/png,image/webp" />
+        <p class="mt-1 text-xs text-text-mute">Banner at the top of your profile. Tip: you can also set it from any film page.</p>
+        {% if user.backdrop_url %}
+          <label class="mt-2 flex items-center gap-2 text-xs text-text-mute"><input type="checkbox" name="remove_backdrop" class="accent-like" /> Remove current backdrop</label>
+        {% endif %}
+        <details class="mt-2">
+          <summary class="cursor-pointer text-xs text-text-mute hover:text-text">…or paste an image URL instead</summary>
+          <input class="input mt-2" id="backdrop_url" name="backdrop_url" type="url" maxlength="500" placeholder="https://…" />
+        </details>
       </div>
 
       <button type="submit" class="btn-primary">Save profile</button>

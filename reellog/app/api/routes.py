@@ -13,7 +13,7 @@ from flask_login import current_user, login_required
 
 from ..config import Config
 from ..extensions import db
-from ..models import LogEntry, WatchlistItem
+from ..models import FavoriteFilm, LogEntry, WatchlistItem
 from ..tmdb import TMDBError, ensure_film_cached, search_movies
 from ..validators import parse_rating, parse_watched_on
 
@@ -71,6 +71,70 @@ def watchlist_toggle():
     db.session.add(WatchlistItem(user_id=current_user.id, film_id=tmdb_id))
     db.session.commit()
     return jsonify({"ok": True, "in_watchlist": True})
+
+
+@api_bp.route("/favorites/toggle", methods=["POST"])
+@login_required
+def favorites_toggle():
+    """Add/remove a film from the user's 'favourite four'.
+
+    Enforces the cap (Config.MAX_FAVORITE_FILMS): adding a 5th returns 409.
+    """
+    payload = request.get_json(silent=True) or {}
+    tmdb_id = payload.get("tmdb_id")
+    if not isinstance(tmdb_id, int):
+        return _err("tmdb_id (integer) is required.", 422)
+
+    try:
+        film = ensure_film_cached(tmdb_id)
+    except TMDBError:
+        return _err("Film not found.", 404)
+    if film is None:
+        return _err("Film data is temporarily unavailable.", 503)
+
+    existing = FavoriteFilm.query.filter_by(
+        user_id=current_user.id, film_id=tmdb_id
+    ).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        count = FavoriteFilm.query.filter_by(user_id=current_user.id).count()
+        return jsonify({"ok": True, "is_favorite": False, "count": count})
+
+    count = FavoriteFilm.query.filter_by(user_id=current_user.id).count()
+    if count >= Config.MAX_FAVORITE_FILMS:
+        return _err(
+            f"You can only pin {Config.MAX_FAVORITE_FILMS} favourite films.", 409
+        )
+
+    db.session.add(
+        FavoriteFilm(user_id=current_user.id, film_id=tmdb_id, position=count)
+    )
+    db.session.commit()
+    return jsonify({"ok": True, "is_favorite": True, "count": count + 1})
+
+
+@api_bp.route("/profile/backdrop", methods=["POST"])
+@login_required
+def set_profile_backdrop():
+    """Set the user's profile backdrop to a film's backdrop image."""
+    payload = request.get_json(silent=True) or {}
+    tmdb_id = payload.get("tmdb_id")
+    if not isinstance(tmdb_id, int):
+        return _err("tmdb_id (integer) is required.", 422)
+
+    try:
+        film = ensure_film_cached(tmdb_id)
+    except TMDBError:
+        return _err("Film not found.", 404)
+    if film is None:
+        return _err("Film data is temporarily unavailable.", 503)
+    if not film.backdrop_path:
+        return _err("That film has no backdrop image.", 422)
+
+    current_user.backdrop_url = film.backdrop_url("w1280")
+    db.session.commit()
+    return jsonify({"ok": True, "backdrop_url": current_user.backdrop_url})
 
 
 def _serialize_log(log: LogEntry) -> dict:

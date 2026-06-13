@@ -9,7 +9,7 @@ from ..models import LogEntry
 from ..tmdb import (
     TMDBError,
     get_film,
-    get_film_credits,
+    get_film_people,
     search_movies,
     trending_movies,
 )
@@ -66,7 +66,9 @@ def film(tmdb_id: int):
         # TMDB unreachable and nothing cached.
         abort(404)
 
-    cast = get_film_credits(tmdb_id)
+    people = get_film_people(tmdb_id)
+    cast = people["cast"]
+    director_id = people["director_id"]
 
     # Reviews from site users (any log that has review text), newest first.
     reviews = (
@@ -83,6 +85,7 @@ def film(tmdb_id: int):
         "in_watchlist": False,
         "watched": False,
         "rating": None,
+        "is_favorite": False,
     }
     if current_user.is_authenticated:
         my_logs = (
@@ -94,12 +97,14 @@ def film(tmdb_id: int):
             "in_watchlist": current_user.in_watchlist(tmdb_id),
             "watched": current_user.has_watched(tmdb_id),
             "rating": current_user.rating_for(tmdb_id),
+            "is_favorite": current_user.is_favorite(tmdb_id),
         }
 
     return render_template(
         "film.html",
         film=film_obj,
         cast=cast,
+        director_id=director_id,
         reviews=reviews,
         my_logs=my_logs,
         user_state=user_state,

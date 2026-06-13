@@ -14,7 +14,7 @@ import requests
 from flask import current_app
 
 from .extensions import db
-from .models import Film
+from .models import Film, Person
 
 log = logging.getLogger(__name__)
 
@@ -175,20 +175,29 @@ def _upsert_film(tmdb_id: int, data: dict) -> Film:
     return film
 
 
-def get_film_credits(tmdb_id: int, limit: int = 12) -> list[dict]:
-    """Top-billed cast for the film page. Returns [] on any failure."""
+def get_film_people(tmdb_id: int, cast_limit: int = 12) -> dict:
+    """Top-billed cast + the director's id for the film page.
+
+    Returns ``{"cast": [...], "director_id": int|None}``. Each cast entry
+    includes the person's TMDB ``id`` so the template can link to the person
+    page. Degrades to ``{"cast": [], "director_id": None}`` on any failure.
+    """
+    empty = {"cast": [], "director_id": None}
     try:
         data = _get(f"/movie/{tmdb_id}", append_to_response="credits")
     except TMDBError:
-        return []
+        return empty
     if not data:
-        return []
+        return empty
+
     cfg = current_app.config
+    credits = data.get("credits", {}) or {}
     cast = []
-    for person in (data.get("credits", {}) or {}).get("cast", [])[:limit]:
+    for person in credits.get("cast", [])[:cast_limit]:
         profile = person.get("profile_path")
         cast.append(
             {
+                "id": person.get("id"),
                 "name": person.get("name"),
                 "character": person.get("character"),
                 "profile_url": (
@@ -196,7 +205,110 @@ def get_film_credits(tmdb_id: int, limit: int = 12) -> list[dict]:
                 ),
             }
         )
-    return cast
+
+    director_id = None
+    for member in credits.get("crew", []):
+        if member.get("job") == "Director":
+            director_id = member.get("id")
+            break
+
+    return {"cast": cast, "director_id": director_id}
+
+
+def get_person(tmdb_id: int, force_refresh: bool = False):
+    """Return ``(Person, filmography)`` for the person page.
+
+    - Caches the person's identity/bio locally (mirrors get_film) so the page
+      survives TMDB outages.
+    - ``filmography`` is a list of film dicts (tmdb_id, title, release_year,
+      poster_path, character/job, popularity), de-duped and sorted by
+      popularity desc. It is built from the live response and is ``[]`` when
+      TMDB is unavailable.
+    - Raises TMDBError for an unknown id with nothing cached (clean 404).
+    """
+    person = db.session.get(Person, tmdb_id)
+    if person and not person.is_stale and not force_refresh:
+        # Fresh identity cached, but we still want a current filmography.
+        filmography = _fetch_filmography(tmdb_id)
+        return person, filmography
+
+    try:
+        data = _get(f"/person/{tmdb_id}", append_to_response="movie_credits")
+    except TMDBError:
+        if person:
+            return person, _fetch_filmography(tmdb_id)
+        raise
+
+    if not data:
+        # Network/rate-limit issue: serve stale cache if we have any.
+        if person:
+            return person, []
+        return None, []
+
+    person = _upsert_person(tmdb_id, data)
+    filmography = _filmography_from_credits(data.get("movie_credits", {}) or {})
+    return person, filmography
+
+
+def _upsert_person(tmdb_id: int, data: dict) -> Person:
+    person = db.session.get(Person, tmdb_id)
+    if person is None:
+        person = Person(tmdb_id=tmdb_id)
+        db.session.add(person)
+    person.name = data.get("name") or "Unknown"
+    person.profile_path = data.get("profile_path")
+    person.biography = data.get("biography")
+    person.known_for_department = data.get("known_for_department")
+    person.cached_at = datetime.utcnow()
+    db.session.commit()
+    return person
+
+
+def _fetch_filmography(tmdb_id: int) -> list[dict]:
+    """Fetch just the movie_credits for an already-cached person."""
+    try:
+        data = _get(f"/person/{tmdb_id}", append_to_response="movie_credits")
+    except TMDBError:
+        return []
+    if not data:
+        return []
+    return _filmography_from_credits(data.get("movie_credits", {}) or {})
+
+
+def _filmography_from_credits(movie_credits: dict) -> list[dict]:
+    """Merge acting + directing credits into a de-duped, popularity-sorted list.
+
+    A film the person both acted in and directed appears once; we keep the
+    directing role label when present (it's the more notable credit).
+    """
+    by_id: dict[int, dict] = {}
+
+    def add(entry: dict, role: str):
+        mid = entry.get("id")
+        if not mid:
+            return
+        existing = by_id.get(mid)
+        film = {
+            "tmdb_id": mid,
+            "title": entry.get("title") or entry.get("original_title") or "Untitled",
+            "release_year": _year_from(entry.get("release_date")),
+            "poster_path": entry.get("poster_path"),
+            "popularity": entry.get("popularity") or 0,
+            "role": role,
+        }
+        # Prefer the directing label if we see the film twice.
+        if existing is None or role == "Director":
+            by_id[mid] = film
+
+    for entry in movie_credits.get("cast", []):
+        add(entry, entry.get("character") or "")
+    for entry in movie_credits.get("crew", []):
+        if entry.get("job") == "Director":
+            add(entry, "Director")
+
+    films = list(by_id.values())
+    films.sort(key=lambda f: f["popularity"], reverse=True)
+    return films
 
 
 def ensure_film_cached(tmdb_id: int) -> Optional[Film]:

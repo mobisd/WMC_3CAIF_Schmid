@@ -1,68 +1,90 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import stars_display, empty_state %}
+{% from "partials/macros.html" import stars_display, empty_state, section_label %}
 {% block title %}{{ film.title }}{% if film.release_year %} ({{ film.release_year }}){% endif %} — ReelLog{% endblock %}
 
 {% block content %}
-  {# --- Backdrop hero --------------------------------------------------- #}
-  <section class="relative -mx-4 -mt-8 mb-8">
-    <div class="relative h-64 w-full overflow-hidden sm:h-80 md:h-96">
+  {# --- Backdrop hero ---------------------------------------------------
+     Full-bleed backdrop in normal flow, faded on every edge so it melts into
+     the page background (no hard seam). All content lives in a centred
+     max-w-[1100px] container; only the poster is pulled up into the *faded*
+     lower portion of the backdrop. #}
+  <section class="-mx-4 -mt-8">
+    <div class="relative h-[280px] w-full overflow-hidden sm:h-[360px] lg:h-[440px]">
       <img
         src="{{ film.backdrop_url('w1280') }}"
         alt=""
-        class="h-full w-full object-cover"
+        class="h-full w-full object-cover object-top"
       />
-      <div class="hero-gradient absolute inset-0"></div>
+      {# Top fade keeps the nav readable. #}
+      <div class="absolute inset-0 bg-gradient-to-b from-bg/80 via-transparent to-transparent"></div>
+      {# Tall bottom fade melts smoothly into --bg (solid at the very bottom). #}
+      <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/70 to-transparent"></div>
+      {# Subtle left/right vignette. #}
+      <div class="absolute inset-0 bg-gradient-to-r from-bg/50 via-transparent to-bg/50"></div>
     </div>
 
-    <div class="mx-auto -mt-32 max-w-content px-4">
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-end">
-        <img
-          src="{{ film.poster_url('w342') }}"
-          alt="{{ film.title }} poster"
-          class="w-32 shrink-0 rounded-lg border border-border shadow-lg sm:w-44"
-        />
-        <div class="pb-2">
-          <h1 class="font-title text-3xl font-bold sm:text-4xl">
-            {{ film.title }}
-            {% if film.release_year %}<span class="text-text-mute">({{ film.release_year }})</span>{% endif %}
-          </h1>
-          <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-dim">
-            {% if film.runtime %}<span>{{ film.runtime }} min</span>{% endif %}
-            {% if film.director %}<span>Directed by <span class="text-text">{{ film.director }}</span></span>{% endif %}
-            {% if film.tmdb_rating %}
-              <span class="text-accent" title="TMDB community rating">★ {{ '%.1f'|format(film.tmdb_rating) }}</span>
-            {% endif %}
-          </p>
+    <div class="relative z-10 mx-auto max-w-[1100px] px-4">
+      <div class="grid grid-cols-1 gap-x-8 gap-y-6 lg:grid-cols-[230px_minmax(0,1fr)_300px] lg:items-start">
+        {# --- Left column: poster, pulled up into the faded backdrop ---- #}
+        <div class="-mt-28 lg:-mt-36">
+          <img
+            src="{{ film.poster_url('w342') }}"
+            alt="{{ film.title }} poster"
+            class="aspect-[2/3] w-36 max-w-full rounded-lg object-cover shadow-2xl ring-1 ring-white/10 sm:w-44 lg:w-full"
+          />
         </div>
-      </div>
-    </div>
-  </section>
 
-  <div class="grid gap-8 lg:grid-cols-[1fr_320px]">
-    {# --- Main column: synopsis, cast, reviews ------------------------- #}
-    <div class="space-y-8">
-      <section>
-        <h2 class="mb-2 font-title text-xl font-semibold">Synopsis</h2>
-        <p class="leading-relaxed text-text-dim">
-          {{ film.overview or "No synopsis available for this film." }}
-        </p>
-      </section>
+        {# --- Center column: title, meta, synopsis, cast --------------- #}
+        <div class="min-w-0 space-y-8 lg:pt-6">
+          <div>
+            <h1 class="font-title text-3xl font-bold sm:text-4xl">
+              {{ film.title }}
+              {% if film.release_year %}<span class="text-text-mute">({{ film.release_year }})</span>{% endif %}
+            </h1>
+            <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-dim">
+              {% if film.runtime %}<span>{{ film.runtime }} min</span>{% endif %}
+              {% if film.director %}
+                <span>Directed by
+                  {% if director_id %}
+                    <a href="{{ url_for('people.person', tmdb_id=director_id) }}" class="text-text hover:text-accent">{{ film.director }}</a>
+                  {% else %}
+                    <span class="text-text">{{ film.director }}</span>
+                  {% endif %}
+                </span>
+              {% endif %}
+              {% if film.tmdb_rating %}
+                <span class="text-accent" title="TMDB community rating">★ {{ '%.1f'|format(film.tmdb_rating) }}</span>
+              {% endif %}
+            </p>
+          </div>
+
+          <section>
+            {{ section_label("Synopsis") }}
+            <p class="mt-3 leading-relaxed text-text-dim">
+              {{ film.overview or "No synopsis available for this film." }}
+            </p>
+          </section>
 
       {% if cast %}
         <section>
-          <h2 class="mb-3 font-title text-xl font-semibold">Cast</h2>
-          <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {{ section_label("Cast") }}
+          <ul class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {% for person in cast %}
-              <li class="card flex items-center gap-3 p-2">
-                {% if person.profile_url %}
-                  <img src="{{ person.profile_url }}" alt="" class="h-12 w-12 rounded object-cover" loading="lazy" />
-                {% else %}
-                  <span class="flex h-12 w-12 items-center justify-center rounded bg-surface-2 text-text-mute">?</span>
-                {% endif %}
-                <div class="min-w-0">
-                  <p class="truncate text-sm font-medium">{{ person.name }}</p>
-                  {% if person.character %}<p class="truncate text-xs text-text-mute">{{ person.character }}</p>{% endif %}
-                </div>
+              <li>
+                <a
+                  href="{{ url_for('people.person', tmdb_id=person.id) }}"
+                  class="card flex items-center gap-3 p-2 transition-colors duration-175 hover:border-accent/60 hover:bg-surface-2"
+                >
+                  {% if person.profile_url %}
+                    <img src="{{ person.profile_url }}" alt="" class="h-12 w-12 rounded object-cover" loading="lazy" />
+                  {% else %}
+                    <span class="flex h-12 w-12 items-center justify-center rounded bg-surface-2 text-text-mute">?</span>
+                  {% endif %}
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-medium">{{ person.name }}</p>
+                    {% if person.character %}<p class="truncate text-xs text-text-mute">{{ person.character }}</p>{% endif %}
+                  </div>
+                </a>
               </li>
             {% endfor %}
           </ul>
@@ -70,7 +92,7 @@
       {% endif %}
 
       <section>
-        <h2 class="mb-3 font-title text-xl font-semibold">Reviews from ReelLog</h2>
+        {{ section_label("Reviews from ReelLog") }}
         {% if reviews %}
           <ul class="space-y-4">
             {% for r in reviews %}
@@ -109,10 +131,17 @@
           data-today="{{ today_iso }}"
           data-in-watchlist="{{ 'true' if user_state.in_watchlist else 'false' }}"
           data-rating="{{ user_state.rating or '' }}"
+          data-is-favorite="{{ 'true' if user_state.is_favorite else 'false' }}"
         >
           <button type="button" class="btn-ghost w-full" data-action="toggle-watchlist" aria-pressed="{{ 'true' if user_state.in_watchlist else 'false' }}">
             <span data-watchlist-label>
               {{ "In your watchlist ✓" if user_state.in_watchlist else "Add to watchlist" }}
+            </span>
+          </button>
+
+          <button type="button" class="btn-ghost w-full" data-action="toggle-favorite" aria-pressed="{{ 'true' if user_state.is_favorite else 'false' }}">
+            <span data-favorite-label>
+              {{ "★ In your favourites" if user_state.is_favorite else "☆ Add to favourites" }}
             </span>
           </button>
 
@@ -148,6 +177,12 @@
           {% if user_state.watched %}
             <p class="text-center text-xs text-accent">You’ve watched this film.</p>
           {% endif %}
+
+          {% if film.backdrop_path %}
+            <button type="button" class="w-full text-center text-xs text-text-mute hover:text-accent" data-action="set-backdrop">
+              Set as my profile backdrop
+            </button>
+          {% endif %}
         </div>
 
         {# --- Existing logs for this film (edit/delete) --------------- #}
@@ -182,7 +217,9 @@
         </div>
       {% endif %}
     </aside>
-  </div>
+      </div>
+    </div>
+  </section>
 
   {# --- Log dialog (hidden until opened by film.js) -------------------- #}
   {% if current_user.is_authenticated %}
