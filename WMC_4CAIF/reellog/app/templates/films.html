@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import film_poster, empty_state with context %}
+{% block title %}{{ user.name }}'s films - ReelLog{% endblock %}
+
+{% block content %}
+  {% set active = 'films' %}
+  {% include "partials/profile_header.html" %}
+
+  <div class="mx-auto max-w-shell">
+    <div class="mb-4 flex items-end justify-between gap-4">
+      <div>
+        <h2 class="font-title text-2xl font-semibold">Films</h2>
+        <p class="mt-1 text-sm text-text-mute">All films {{ user.name }} has logged.</p>
+      </div>
+      <span class="text-sm text-text-mute">{{ films|length }} total</span>
+    </div>
+
+    {% if films %}
+      <div class="poster-grid">
+        {% for film in films %}
+          {{ film_poster(film) }}
+        {% endfor %}
+      </div>
+    {% else %}
+      {{ empty_state("No films logged yet.") }}
+    {% endif %}
+  </div>
+{% endblock %}

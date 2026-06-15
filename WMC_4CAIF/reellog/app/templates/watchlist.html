@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import film_poster, empty_state with context %}
+{% block title %}{{ user.name }}’s watchlist — ReelLog{% endblock %}
+
+{% block content %}
+  {% set active = 'watchlist' %}
+  {% include "partials/profile_header.html" %}
+
+  {% if items %}
+    <div class="poster-grid">
+      {% for item in items %}{{ film_poster(item.film) }}{% endfor %}
+    </div>
+  {% else %}
+    {{ empty_state("Nothing on the watchlist yet.", "🍿") }}
+  {% endif %}
+{% endblock %}

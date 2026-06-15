@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import poster_card, empty_state with context %}
+{% block title %}Films starring {{ person.name }} - ReelLog{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-content">
+    <div class="grid gap-12 lg:grid-cols-[1fr_310px]">
+      <section>
+        <div class="mb-6 border-b border-line pb-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-text-dim">Films starring</p>
+          <h1 class="mt-1 font-title text-3xl font-bold">{{ person.name }}</h1>
+        </div>
+
+        <div class="mb-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.18em] text-mute">
+          <span>Actor</span>
+          <span>Sorted by popularity</span>
+          {% if credits %}<span>{{ credits|length }} films</span>{% endif %}
+        </div>
+
+        {% if credits %}
+          <div class="poster-grid">
+            {% for film in credits %}
+              {{ poster_card(film) }}
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ empty_state("No film credits found.") }}
+        {% endif %}
+      </section>
+
+      <aside class="rounded-lg border border-line bg-surface/40 p-4 lg:sticky lg:top-20 lg:self-start">
+        {% if person.profile_url %}
+          <img src="{{ person.profile_url }}" alt="{{ person.name }}" class="aspect-[2/3] w-full rounded-md object-cover ring-1 ring-border" />
+        {% else %}
+          <div class="flex aspect-[2/3] w-full items-center justify-center rounded-md bg-surface-2 text-4xl font-semibold text-text-mute ring-1 ring-border">
+            {{ person.name[0]|upper }}
+          </div>
+        {% endif %}
+
+        <div class="mt-4 space-y-4 text-sm leading-relaxed text-text-dim">
+          {% if person.biography %}
+            <p class="line-clamp-6">{{ person.biography }}</p>
+          {% else %}
+            <p>No biography available.</p>
+          {% endif %}
+
+          <dl class="space-y-2 text-sm">
+            {% if person.birthday %}
+              <div>
+                <dt class="text-xs uppercase tracking-[0.18em] text-mute">Born</dt>
+                <dd class="text-text-dim">{{ person.birthday }}{% if person.place_of_birth %} in {{ person.place_of_birth }}{% endif %}</dd>
+              </div>
+            {% endif %}
+            {% if person.known_for_department %}
+              <div>
+                <dt class="text-xs uppercase tracking-[0.18em] text-mute">Known for</dt>
+                <dd class="text-text-dim">{{ person.known_for_department }}</dd>
+              </div>
+            {% endif %}
+          </dl>
+
+          <a href="{{ person.tmdb_url }}" class="btn-ghost w-full" rel="noopener">More details at TMDB</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+{% endblock %}

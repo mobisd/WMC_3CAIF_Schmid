@@ -1,0 +1,86 @@
+{% from "partials/macros.html" import avatar with context %}
+
+<section class="-mx-4 -mt-10 mb-12 overflow-hidden">
+  <div class="mx-auto max-w-content px-4">
+    <div class="profile-hero relative overflow-hidden border-x border-b border-line">
+      {% if user.backdrop_url %}
+        <img src="{{ user.backdrop_url|replace('/w1280/', '/original/')|replace('/w780/', '/original/') }}" alt="" class="profile-hero-image" />
+      {% else %}
+        <div class="h-full w-full bg-gradient-to-br from-surface-2 to-bg"></div>
+      {% endif %}
+      <div class="profile-hero-shade"></div>
+
+      <div class="profile-hero-content">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div class="flex items-end gap-4">
+            {% if user.avatar_url %}
+              <button type="button" class="rounded-full transition hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-link focus:ring-offset-2 focus:ring-offset-bg" data-avatar-open aria-label="Open {{ user.name }} profile picture">
+                {{ avatar(user, "h-24 w-24 sm:h-28 sm:w-28", "text-3xl") }}
+              </button>
+            {% else %}
+              {{ avatar(user, "h-24 w-24 sm:h-28 sm:w-28", "text-3xl") }}
+            {% endif %}
+            <div class="pb-1">
+              <h1 class="font-title text-3xl font-bold tracking-tight sm:text-4xl">{{ user.name }}</h1>
+              <p class="mt-1 text-sm font-medium text-link">@{{ user.username }}</p>
+            </div>
+          </div>
+          {% if current_user.is_authenticated and current_user.id == user.id %}
+            <a href="{{ url_for('users.settings') }}" class="btn-ghost self-start bg-bg/45 backdrop-blur sm:self-auto">Edit profile</a>
+          {% endif %}
+        </div>
+
+        <div class="mt-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            {% if user.bio %}
+              <p class="max-w-2xl text-sm leading-relaxed text-text-dim">{{ user.bio }}</p>
+            {% endif %}
+          </div>
+
+          <dl class="flex flex-wrap items-center gap-x-6 gap-y-3 [font-variant-numeric:tabular-nums]">
+            {% set stats = [
+              ('Films', user.films_watched),
+              ('This year', user.films_watched_this_year),
+              ('Reviews', user.review_count),
+              ('Watchlist', user.watchlist_count),
+            ] %}
+            {% for label, value in stats %}
+              <div>
+                <dd class="font-title text-2xl font-semibold leading-none">{{ value }}</dd>
+                <dt class="mt-1 text-[10px] uppercase tracking-[0.18em] text-mute">{{ label }}</dt>
+              </div>
+              {% if not loop.last %}<div class="h-8 w-px bg-line"></div>{% endif %}
+            {% endfor %}
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <nav class="profile-tabs mt-6 flex flex-wrap gap-1 text-sm" aria-label="Profile sections">
+      {% set tabs = [
+        ('activity', 'Activity', url_for('users.profile', username=user.username)),
+        ('films', 'Films', url_for('users.films', username=user.username)),
+        ('diary', 'Diary', url_for('users.diary', username=user.username)),
+        ('reviews', 'Reviews', url_for('users.reviews', username=user.username)),
+        ('watchlist', 'Watchlist', url_for('users.watchlist', username=user.username)),
+        ('stats', 'Stats', url_for('users.stats', username=user.username)),
+      ] %}
+      {% for key, label, href in tabs %}
+        <a href="{{ href }}"
+           class="shrink-0 border-b-2 px-3 py-3 {% if key == active %}border-accent text-text{% else %}border-transparent text-text-dim hover:text-text{% endif %}"
+           {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+  </div>
+
+  {% if user.avatar_url %}
+    <dialog id="avatar-dialog" class="avatar-dialog p-0 text-text backdrop:bg-black/80">
+      <div class="overflow-hidden rounded-md border border-border bg-surface shadow-2xl shadow-black/40">
+        <div class="flex items-center justify-end bg-surface-2 px-3 py-2">
+          <button type="button" class="text-2xl leading-none text-text-mute transition hover:text-text" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <img src="{{ user.avatar_url }}" alt="{{ user.name }} profile picture" class="avatar-dialog-image" />
+      </div>
+    </dialog>
+  {% endif %}
+</section>

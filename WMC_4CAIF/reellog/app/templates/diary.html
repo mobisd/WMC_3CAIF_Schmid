@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import stars_display, empty_state %}
+{% block title %}{{ user.name }}'s diary - ReelLog{% endblock %}
+
+{% block content %}
+  {% set active = 'diary' %}
+  {% include "partials/profile_header.html" %}
+
+  <div class="mx-auto mb-6 max-w-shell">
+    <form method="get" class="card grid gap-3 p-4 sm:grid-cols-4 sm:items-end">
+      <div>
+        <label class="label" for="diary-year">Year</label>
+        <select class="input" id="diary-year" name="year">
+          <option value="">All years</option>
+          {% for year in years %}
+            <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="label" for="diary-rating">Rating</label>
+        <select class="input" id="diary-rating" name="rating">
+          <option value="">Any rating</option>
+          {% for rating in range(10, 0, -1) %}
+            <option value="{{ rating }}" {% if selected_rating == rating|string %}selected{% endif %}>{{ rating / 2 }} stars</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="label" for="diary-filter">Filter</label>
+        <select class="input" id="diary-filter" name="filter">
+          <option value="">Everything</option>
+          <option value="liked" {% if selected_flag == 'liked' %}selected{% endif %}>Liked</option>
+          <option value="reviewed" {% if selected_flag == 'reviewed' %}selected{% endif %}>Reviewed</option>
+          <option value="rewatches" {% if selected_flag == 'rewatches' %}selected{% endif %}>Rewatches</option>
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button type="submit" class="btn-primary flex-1">Apply</button>
+        <a href="{{ url_for('users.diary', username=user.username) }}" class="btn-ghost">Reset</a>
+      </div>
+    </form>
+  </div>
+
+  {% if logs %}
+    <ul class="mx-auto max-w-shell space-y-3">
+      {% for log in logs %}
+        <li class="card flex gap-4 p-3 transition hover:border-link/40 hover:bg-surface">
+          <a href="{{ url_for('films.film', tmdb_id=log.film.tmdb_id) }}" class="poster w-16 shrink-0">
+            <img src="{{ effective_poster_url(log.film, current_user, 'w185') }}" alt="{{ log.film.title }} poster" loading="lazy" />
+          </a>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <a href="{{ url_for('films.film', tmdb_id=log.film.tmdb_id) }}" class="font-medium hover:text-link">
+                {{ log.film.title }}{% if log.film.release_year %} <span class="text-text-mute">{{ log.film.release_year }}</span>{% endif %}
+              </a>
+              <span class="flex shrink-0 items-center gap-2 text-sm">
+                {{ stars_display(log.rating) }}
+                {% if log.liked %}<span class="text-like">♥</span>{% endif %}
+              </span>
+            </div>
+            <p class="text-xs text-text-mute">
+              {% if log.watched_on %}{{ log.watched_on.strftime('%d %b %Y') }}{% else %}Date unknown{% endif %}
+              {% if log.is_rewatch %} · rewatch{% endif %}
+              {% if log.contains_spoilers %} · spoilers{% endif %}
+            </p>
+            {% if log.review %}
+              <p class="mt-1 line-clamp-3 whitespace-pre-line text-sm text-text-dim">{{ log.review }}</p>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="mx-auto max-w-shell">
+      {{ empty_state("No diary entries match these filters.") }}
+    </div>
+  {% endif %}
+{% endblock %}

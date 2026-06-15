@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --accent: #d9a441;
+  --gold: #d9a441;
+  --link: #7db4d8;
+  --like: #e0567b;
+  --rose: #e0567b;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2
+      text-sm font-semibold transition duration-175
+      focus-visible:outline-none focus-visible:ring-2
+      focus-visible:ring-accent focus-visible:ring-offset-2
+      focus-visible:ring-offset-bg disabled:opacity-50
+      disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-text text-bg shadow-sm shadow-black/10 hover:-translate-y-0.5 hover:bg-white;
+  }
+  .btn-ghost {
+    @apply btn border border-border bg-surface/40 text-text
+      hover:-translate-y-0.5 hover:border-link/60 hover:bg-surface-2/80 hover:text-white;
+  }
+  .btn-accent {
+    @apply btn bg-accent text-bg hover:-translate-y-0.5 hover:brightness-110;
+  }
+
+  .input {
+    @apply w-full rounded-md border border-border bg-bg/30 px-3 py-2
+      text-sm text-text placeholder-text-mute transition-colors duration-175
+      focus:border-link focus:outline-none focus:ring-1 focus:ring-link;
+  }
+
+  .card {
+    @apply rounded-lg border border-border/70 bg-surface/70 shadow-sm shadow-black/5;
+  }
+
+  .label {
+    @apply mb-1 block text-sm font-medium text-text-dim;
+  }
+
+  .settings-tab {
+    @apply block w-full rounded-md px-3 py-2 text-left text-text-dim transition
+      hover:bg-surface-2 hover:text-link;
+  }
+  .settings-tab.is-active {
+    @apply bg-surface-2 text-text shadow-sm shadow-black/10;
+  }
+
+  .poster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
+    gap: 1rem;
+  }
+  .poster {
+    @apply relative block overflow-hidden rounded-md bg-surface-2
+      ring-1 ring-border/70 transition duration-175;
+    aspect-ratio: 2 / 3;
+  }
+  .poster:hover {
+    @apply -translate-y-1 shadow-xl shadow-black/20 ring-link/70 brightness-105;
+  }
+  .poster img {
+    @apply h-full w-full object-cover;
+  }
+}
+
+.app-shell-bg {
+  background-color: #111820;
+  background-image:
+    radial-gradient(circle at 50% -16rem, rgba(125, 180, 216, 0.1), transparent 34rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 22rem);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.profile-hero {
+  min-height: 430px;
+  background: #0f151c;
+}
+
+.profile-hero-image {
+  height: 100%;
+  min-height: 430px;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(1.02) brightness(1.04);
+  image-rendering: auto;
+}
+
+.profile-hero-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(17, 24, 32, 0.1) 0%, rgba(17, 24, 32, 0.02) 45%, rgba(17, 24, 32, 0.18) 100%),
+    linear-gradient(180deg, rgba(17, 24, 32, 0) 0%, rgba(17, 24, 32, 0.06) 48%, rgba(17, 24, 32, 0.72) 100%);
+}
+
+.profile-hero-content {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0 2rem 2rem;
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.55);
+}
+
+.profile-tabs {
+  border-bottom: 1px solid rgba(218, 228, 238, 0.14);
+}
+
+.avatar-dialog {
+  width: min(520px, calc(100vw - 2rem));
+  max-width: none;
+  background: transparent;
+}
+
+.avatar-dialog-image {
+  display: block;
+  width: 100%;
+  max-height: min(72vh, 680px);
+  object-fit: contain;
+  background: #05070a;
+}
+
+.brand-logo {
+  height: 2rem;
+  width: 2rem;
+  border-radius: 0.375rem;
+  object-fit: cover;
+}
+
+.brand-logo-sm {
+  height: 1.5rem;
+  width: 1.5rem;
+  border-radius: 0.25rem;
+  object-fit: cover;
+}
+
+.font-title {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Segoe UI", Roboto, Arial, sans-serif;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(219, 229, 240, 0.2) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(219, 229, 240, 0.18);
+  border-radius: 999px;
+}
+
+.hero-gradient {
+  background-image: linear-gradient(
+    to top,
+    var(--tw-gradient-from, #111820) 0%,
+    rgba(17, 24, 32, 0.74) 45%,
+    rgba(17, 24, 32, 0.2) 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  .poster:hover {
+    transform: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .profile-hero,
+  .profile-hero-image {
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-hero,
+  .profile-hero-image {
+    min-height: 460px;
+  }
+
+  .profile-hero-content {
+    padding: 0 1rem 1.25rem;
+  }
+}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import poster_card, empty_state %}
+{% block title %}{% if query %}“{{ query }}” — search{% else %}Search{% endif %} — ReelLog{% endblock %}
+
+{% block content %}
+  <h1 class="mb-6 font-title text-3xl font-bold">
+    {% if query %}Results for “{{ query }}”{% else %}Search films{% endif %}
+  </h1>
+
+  {% if not query %}
+    {{ empty_state("Type a film title in the search box above to begin.", "🔎") }}
+  {% elif results %}
+    <div class="poster-grid">
+      {% for item in results %}{{ poster_card(item) }}{% endfor %}
+    </div>
+
+    {% if total_pages and total_pages > 1 %}
+      <nav class="mt-8 flex items-center justify-center gap-3 text-sm" aria-label="Pagination">
+        {% if page > 1 %}
+          <a class="btn-ghost" href="{{ url_for('films.search', q=query, page=page-1) }}">← Previous</a>
+        {% endif %}
+        <span class="text-text-mute">Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a class="btn-ghost" href="{{ url_for('films.search', q=query, page=page+1) }}">Next →</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    {{ empty_state("No films matched that search. Try a different title.", "🎞️") }}
+  {% endif %}
+{% endblock %}

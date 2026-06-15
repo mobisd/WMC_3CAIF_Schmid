@@ -1,0 +1,81 @@
+{% macro section_label(text, more_href=None, more_text="All") %}
+  <div class="flex items-baseline justify-between gap-3">
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-mute">{{ text }}</h2>
+    {% if more_href %}
+      <a href="{{ more_href }}" class="text-[11px] uppercase tracking-[0.18em] text-mute transition hover:text-link">{{ more_text }}</a>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro avatar(user, size_class="h-24 w-24", text_class="text-3xl") %}
+  {% if user.avatar_url %}
+    <img src="{{ user.avatar_url }}" alt="{{ user.name }}" class="{{ size_class }} shrink-0 rounded-full object-cover ring-2 ring-bg" />
+  {% else %}
+    <span class="{{ size_class }} {{ text_class }} flex shrink-0 items-center justify-center rounded-full bg-surface-2 font-semibold text-text-dim ring-2 ring-bg">{{ user.name[0]|upper }}</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro poster_card(item) %}
+  <a href="{{ url_for('films.film', tmdb_id=item.tmdb_id) }}" class="poster group" aria-label="{{ item.title }}{% if item.release_year %} ({{ item.release_year }}){% endif %}">
+    {% if item.poster_url %}
+      <img src="{{ item.poster_url }}" alt="{{ item.title }} poster" loading="lazy" />
+    {% elif item.poster_path %}
+      <img src="https://image.tmdb.org/t/p/w500{{ item.poster_path }}" alt="{{ item.title }} poster" loading="lazy" />
+    {% else %}
+      <img src="{{ url_for('static', filename='img/poster-fallback.svg') }}" alt="No poster available for {{ item.title }}" loading="lazy" />
+    {% endif %}
+    <span class="absolute inset-x-0 bottom-0 hidden bg-bg/85 px-2 py-1 text-xs text-text-dim group-hover:block">{{ item.title }}{% if item.release_year %} · {{ item.release_year }}{% endif %}</span>
+  </a>
+{% endmacro %}
+
+{% macro film_poster(film) %}
+  <a href="{{ url_for('films.film', tmdb_id=film.tmdb_id) }}" class="poster group" aria-label="{{ film.title }}{% if film.release_year %} ({{ film.release_year }}){% endif %}">
+    <img src="{{ effective_poster_url(film, current_user, 'w342') }}" alt="{{ film.title }} poster" loading="lazy" />
+    <span class="absolute inset-x-0 bottom-0 hidden bg-bg/85 px-2 py-1 text-xs text-text-dim group-hover:block">{{ film.title }}{% if film.release_year %} · {{ film.release_year }}{% endif %}</span>
+  </a>
+{% endmacro %}
+
+{% macro stars_display(rating) %}
+  {% if rating %}
+    <span class="inline-flex items-center text-accent" aria-label="{{ (rating / 2) }} out of 5 stars">
+      {%- set full = rating // 2 -%}
+      {%- set half = rating % 2 -%}
+      {%- for _ in range(full) %}★{% endfor -%}
+      {%- if half %}½{% endif -%}
+    </span>
+  {% endif %}
+{% endmacro %}
+
+{% macro ratings_histogram(counts) %}
+  {% set peak = counts|max %}
+  {% set total = counts|sum %}
+  <div class="space-y-3" aria-label="Rating distribution">
+    <div class="flex items-center justify-between border-b border-line pb-2">
+      <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-dim">Ratings</h2>
+      <span class="text-[11px] tabular-nums text-text-mute">{{ total }}</span>
+    </div>
+    <div>
+      <div class="flex h-14 items-end gap-1" aria-hidden="true">
+        {% for c in counts %}
+          {% set height = ((c / peak * 100) if peak else 0)|round(1) %}
+          <div class="flex h-full flex-1 items-end">
+            <div
+              class="w-full rounded-t-sm bg-[#536272]"
+              style="height: {{ height }}%; min-height: {{ '0.22rem' if c else '0' }}"
+            ></div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="mt-2 flex items-center justify-between text-xs font-semibold leading-none text-accent">
+        <span aria-label="0.5 stars">&#9733;</span>
+        <span aria-label="5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro empty_state(message, icon=None) %}
+  <div class="rounded-md border border-dashed border-line bg-surface/40 px-5 py-8 text-center">
+    <p class="text-sm text-text-dim">{{ message }}</p>
+  </div>
+{% endmacro %}

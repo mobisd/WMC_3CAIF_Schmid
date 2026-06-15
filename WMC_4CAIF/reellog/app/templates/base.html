@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <link
+      rel="icon"
+      type="image/jpeg"
+      href="{{ url_for('static', filename='img/66ddd0a43433943549bd2beb9cec5273.jpg') }}"
+    />
+    <title>{% block title %}ReelLog{% endblock %}</title>
+
+    {% if config.TAILWIND_CDN %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              bg: "#111820",
+              surface: "#18212A",
+              "surface-2": "#202A34",
+              border: "#2F3C49",
+              line: "rgba(218,228,238,.12)",
+              text: "#F1F5F8",
+              "text-dim": "#B4C0CC",
+              "text-mute": "#758391",
+              mute: "#758391",
+              accent: "#D9A441",
+              link: "#7DB4D8",
+              like: "#E0567B",
+            },
+            fontFamily: {
+              sans: [
+                "-apple-system",
+                "BlinkMacSystemFont",
+                '"SF Pro Display"',
+                '"SF Pro Text"',
+                '"Segoe UI"',
+                "Roboto",
+                "Arial",
+                "sans-serif",
+              ],
+              serif: ["Georgia", "ui-serif", "serif"],
+            },
+            maxWidth: { content: "1180px", shell: "1040px" },
+          },
+        },
+      };
+    </script>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/cdn-extras.css') }}"
+    />
+    {% else %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/output.css') }}"
+    />
+    {% endif %}
+  </head>
+  <body
+    class="app-shell-bg flex min-h-full flex-col overflow-x-hidden bg-bg font-sans text-text antialiased"
+  >
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-bg"
+      >Skip to content</a
+    >
+
+    {% include "partials/nav.html" %}
+
+    <div
+      id="flash-container"
+      class="mx-auto w-full max-w-content px-4 pt-4"
+      aria-live="polite"
+    >
+      {% with messages = get_flashed_messages(with_categories=true) %} {% for
+      category, message in messages %}
+      <div
+        class="flash mb-2 rounded-md border px-4 py-3 text-sm {% if category == 'error' %}border-like/40 bg-like/10 text-like {% elif category == 'success' %}border-accent/40 bg-accent/10 text-accent {% else %}border-border bg-surface text-text-dim{% endif %}"
+        role="status"
+      >
+        {{ message }}
+      </div>
+      {% endfor %} {% endwith %}
+    </div>
+
+    <main id="main" class="mx-auto w-full max-w-content flex-1 px-4 py-10">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="border-t border-line bg-bg/50">
+      <div
+        class="mx-auto flex max-w-content flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-text-mute sm:flex-row"
+      >
+        <span
+          class="flex items-center gap-2 font-title text-base text-text-dim"
+        >
+          <img
+            src="{{ url_for('static', filename='img/66ddd0a43433943549bd2beb9cec5273.jpg') }}"
+            alt=""
+            class="brand-logo-sm ring-1 ring-line"
+          />
+          ReelLog
+        </span>
+        <span>
+          Schmid Copyright · {{ current_year }} · Film data from
+          <a
+            href="https://www.themoviedb.org/"
+            class="text-text-dim hover:text-link"
+            rel="noopener"
+            >TMDB</a
+          >
+        </span>
+      </div>
+    </footer>
+
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/main.js') }}"
+    ></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import stars_display, empty_state %}
+{% block title %}{{ film.title }}{% if film.release_year %} ({{ film.release_year }}){% endif %} - ReelLog{% endblock %}
+
+{% block content %}
+  <section class="relative -mx-4 -mt-8 mb-10">
+    <div class="relative h-[360px] w-full overflow-hidden sm:h-[460px] lg:h-[560px]">
+      <img src="{{ effective_backdrop_url }}" alt="" class="h-full w-full object-cover object-center" />
+      <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/70 to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-bg/50 via-transparent to-transparent"></div>
+    </div>
+
+    <div class="relative z-10 mx-auto -mt-24 max-w-shell px-4 sm:-mt-32">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-end">
+        <img src="{{ effective_poster_url }}" alt="{{ film.title }} poster" class="aspect-[2/3] w-36 shrink-0 rounded-lg object-cover shadow-2xl ring-1 ring-border sm:w-48" />
+        <div class="pb-3">
+          <h1 class="font-title text-3xl font-bold sm:text-4xl">
+            {{ film.title }}
+            {% if film.release_year %}<span class="text-text-mute">({{ film.release_year }})</span>{% endif %}
+          </h1>
+          <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-dim">
+            {% if film.runtime %}<span>{{ film.runtime }} min</span>{% endif %}
+            {% if film.director %}<span>Directed by <span class="text-text">{{ film.director }}</span></span>{% endif %}
+            {% if film.tmdb_rating %}<span class="text-accent" title="TMDB community rating">★ {{ '%.1f'|format(film.tmdb_rating) }}</span>{% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid gap-8 lg:grid-cols-[1fr_320px]">
+    <div class="space-y-8">
+      <section>
+        <h2 class="mb-2 font-title text-xl font-semibold">Synopsis</h2>
+        <p class="leading-relaxed text-text-dim">{{ film.overview or "No synopsis available for this film." }}</p>
+      </section>
+
+      {% if cast %}
+        <section>
+          <h2 class="mb-3 font-title text-xl font-semibold">Cast</h2>
+          <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {% for person in cast %}
+              <li>
+                <a
+                  href="{{ url_for('people.person', person_id=person.id) }}"
+                  class="card flex items-center gap-3 p-2 transition hover:-translate-y-0.5 hover:border-link"
+                >
+                {% if person.profile_url %}
+                  <img src="{{ person.profile_url }}" alt="" class="h-12 w-12 rounded object-cover" loading="lazy" />
+                {% else %}
+                  <span class="flex h-12 w-12 items-center justify-center rounded bg-surface-2 text-text-mute">?</span>
+                {% endif %}
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium">{{ person.name }}</p>
+                  {% if person.character %}<p class="truncate text-xs text-text-mute">{{ person.character }}</p>{% endif %}
+                </div>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
+      <section>
+        <h2 class="mb-3 font-title text-xl font-semibold">Reviews from ReelLog</h2>
+        {% if reviews %}
+          <ul class="space-y-4">
+            {% for r in reviews %}
+              <li class="card p-4">
+                <div class="mb-1 flex items-center justify-between">
+                  <a href="{{ url_for('users.profile', username=r.user.username) }}" class="text-sm font-medium hover:text-link">{{ r.user.name }}</a>
+                  <span class="flex items-center gap-2 text-xs">
+                    {{ stars_display(r.rating) }}
+                    {% if r.liked %}<span class="text-like">♥</span>{% endif %}
+                  </span>
+                </div>
+                {% if r.contains_spoilers %}
+                  <details class="text-sm text-text-dim">
+                    <summary class="cursor-pointer text-text-mute">Review contains spoilers - click to show</summary>
+                    <p class="mt-2 whitespace-pre-line">{{ r.review }}</p>
+                  </details>
+                {% else %}
+                  <p class="whitespace-pre-line text-sm text-text-dim">{{ r.review }}</p>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          {{ empty_state("No reviews yet. Be the first to write one.") }}
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="lg:sticky lg:top-20 lg:self-start">
+      {% if current_user.is_authenticated %}
+        <div
+          class="card space-y-4 p-4"
+          id="action-panel"
+          data-tmdb-id="{{ film.tmdb_id }}"
+          data-today="{{ today_iso }}"
+          data-in-watchlist="{{ 'true' if user_state.in_watchlist else 'false' }}"
+          data-rating="{{ user_state.rating or '' }}"
+          data-default-poster-path="{{ film.poster_path or '' }}"
+          data-default-backdrop-path="{{ film.backdrop_path or '' }}"
+          data-user-poster-path="{{ effective_paths.poster_path if effective_paths.has_poster_override else '' }}"
+          data-user-backdrop-path="{{ effective_paths.backdrop_path if effective_paths.has_backdrop_override else '' }}"
+          {% if user_state.current_log %}
+            data-current-log='{{ {"id": user_state.current_log.id, "watched_on": user_state.current_log.watched_on.isoformat() if user_state.current_log.watched_on else None, "rating": user_state.current_log.rating, "review": user_state.current_log.review, "liked": user_state.current_log.liked, "is_rewatch": user_state.current_log.is_rewatch, "contains_spoilers": user_state.current_log.contains_spoilers}|tojson }}'
+          {% endif %}
+        >
+          <button type="button" class="btn-ghost w-full" data-action="toggle-watchlist" aria-pressed="{{ 'true' if user_state.in_watchlist else 'false' }}">
+            <span data-watchlist-label>{{ "In your watchlist" if user_state.in_watchlist else "Add to watchlist" }}</span>
+          </button>
+
+          <div>
+            <span class="label">Your rating</span>
+            <div class="star-widget flex items-center gap-1 text-2xl" role="slider" tabindex="0" aria-label="Rate this film from 0.5 to 5 stars" aria-valuemin="0" aria-valuemax="5" aria-valuenow="{{ (user_state.rating / 2) if user_state.rating else 0 }}" data-star-widget>
+              {% for i in range(1, 6) %}
+                <span class="star relative inline-block cursor-pointer text-text-mute" data-star="{{ i }}">★</span>
+              {% endfor %}
+            </div>
+            <div class="mt-1 text-xs text-text-mute">
+              <span data-rating-text>{{ ('%g'|format(user_state.rating / 2) ~ ' stars') if user_state.rating else 'Tap a star to rate' }}</span>
+            </div>
+          </div>
+
+          <button type="button" class="btn-primary w-full" data-action="open-log">{{ "Edit current entry" if user_state.watched else "Log, rate or review" }}</button>
+          {% if user_state.watched %}
+            <button type="button" class="btn-ghost w-full" data-action="log-again">Log again</button>
+            <p class="text-center text-xs text-accent">You've watched this film.</p>
+          {% endif %}
+
+          <div class="border-t border-border pt-3">
+            <p class="label">Your images</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" class="btn-ghost px-2 text-xs" data-image-picker="poster">Change poster</button>
+              <button type="button" class="btn-ghost px-2 text-xs" data-image-picker="backdrop">Change backdrop</button>
+            </div>
+          </div>
+        </div>
+
+        {% if my_logs %}
+          <div class="mt-4 space-y-2">
+            <h3 class="text-sm font-medium text-text-dim">Your entries</h3>
+            {% for log in my_logs %}
+              <div class="card p-3 text-sm" data-log-id="{{ log.id }}">
+                <div class="flex items-center justify-between">
+                  <span class="text-text-dim">
+                    {% if log.watched_on %}{{ log.watched_on.strftime('%d %b %Y') }}{% else %}Date unknown{% endif %}
+                    {% if log.is_rewatch %} · rewatch{% endif %}
+                  </span>
+                  <span class="flex items-center gap-2">
+                    {{ stars_display(log.rating) }}
+                    {% if log.liked %}<span class="text-like">♥</span>{% endif %}
+                  </span>
+                </div>
+                {% if log.review %}<p class="mt-1 whitespace-pre-line text-text-mute">{{ log.review }}</p>{% endif %}
+                <div class="mt-2 flex gap-3 text-xs">
+                  <button type="button" class="text-text-mute hover:text-text" data-action="edit-log" data-log='{{ {"id": log.id, "watched_on": log.watched_on.isoformat() if log.watched_on else None, "rating": log.rating, "review": log.review, "liked": log.liked, "is_rewatch": log.is_rewatch, "contains_spoilers": log.contains_spoilers}|tojson }}'>Edit</button>
+                  <button type="button" class="text-text-mute hover:text-like" data-action="delete-log" data-log-id="{{ log.id }}">Delete</button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="card p-4 text-center text-sm text-text-dim">
+          <p class="mb-3">Log in to rate, review and track this film.</p>
+          <a href="{{ url_for('auth.login', next=request.path) }}" class="btn-primary w-full">Log in</a>
+        </div>
+      {% endif %}
+    </aside>
+  </div>
+
+  {% if current_user.is_authenticated %}
+    <dialog id="log-dialog" class="card w-full max-w-md rounded-lg p-0 text-text backdrop:bg-black/60">
+      <form method="dialog" id="log-form" class="space-y-4 p-6">
+        <h2 class="font-title text-xl font-semibold" data-dialog-title>Log this film</h2>
+        <input type="hidden" name="log_id" />
+        <div>
+          <label class="label" for="log-date">Watched on</label>
+          <input class="input" type="date" id="log-date" name="watched_on" max="{{ today_iso }}" />
+        </div>
+        <div>
+          <span class="label">Rating</span>
+          <div class="dialog-stars flex items-center gap-1 text-2xl" data-dialog-stars>
+            {% for i in range(1, 6) %}<span class="star relative inline-block cursor-pointer text-text-mute" data-star="{{ i }}">★</span>{% endfor %}
+            <button type="button" class="ml-2 text-xs text-text-mute hover:text-text" data-dialog-clear>clear</button>
+          </div>
+        </div>
+        <div>
+          <label class="label" for="log-review">Review <span class="text-text-mute">(optional)</span></label>
+          <textarea class="input" id="log-review" name="review" rows="4" maxlength="5000"></textarea>
+        </div>
+        <div class="flex flex-wrap gap-4 text-sm">
+          <label class="flex items-center gap-2"><input type="checkbox" name="liked" class="accent-like" /> Liked</label>
+          <label class="flex items-center gap-2"><input type="checkbox" name="is_rewatch" class="accent-accent" /> Rewatch</label>
+          <label class="flex items-center gap-2"><input type="checkbox" name="contains_spoilers" class="accent-accent" /> Spoilers</label>
+        </div>
+        <p class="hidden text-sm text-like" data-dialog-error></p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="btn-ghost" data-dialog-cancel>Cancel</button>
+          <button type="submit" class="btn-primary" data-dialog-save>Save entry</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="film-image-dialog" class="card w-[min(920px,calc(100vw-2rem))] p-0 text-text backdrop:bg-black/70">
+      <div class="space-y-4 p-5">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="font-title text-xl font-semibold" data-image-title>Change image</h2>
+            <p class="mt-1 text-sm text-text-mute" data-image-note></p>
+          </div>
+          <button type="button" class="text-text-mute hover:text-text" data-modal-close aria-label="Close">x</button>
+        </div>
+        <div class="grid max-h-[60vh] grid-cols-2 gap-3 overflow-auto pr-1 sm:grid-cols-3" data-film-image-grid></div>
+        <label class="hidden items-center gap-2 text-sm text-text-dim" data-profile-backdrop-wrap>
+          <input type="checkbox" class="accent-accent" data-use-profile-backdrop />
+          Use as my profile backdrop too
+        </label>
+        <p class="hidden text-sm text-like" data-film-image-error></p>
+        <div class="flex justify-between gap-2">
+          <button type="button" class="btn-ghost" data-image-reset>Reset</button>
+          <div class="flex gap-2">
+            <button type="button" class="btn-ghost" data-modal-close>Cancel</button>
+            <button type="button" class="btn-primary disabled:opacity-50" data-image-save disabled>Save changes</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="delete-log-dialog" class="card w-full max-w-sm p-0 text-text backdrop:bg-black/70">
+      <div class="space-y-4 p-5">
+        <div>
+          <h2 class="font-title text-xl font-semibold">Delete entry?</h2>
+          <p class="mt-2 text-sm text-text-dim">This removes the diary entry, rating, review, and like stored on it.</p>
+        </div>
+        <p class="hidden text-sm text-like" data-delete-error></p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="btn-ghost" data-modal-close>Cancel</button>
+          <button type="button" class="btn-primary bg-like text-white hover:bg-like/90" data-delete-confirm>Delete entry</button>
+        </div>
+      </div>
+    </dialog>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script type="module" src="{{ url_for('static', filename='js/film.js') }}"></script>
+{% endblock %}
