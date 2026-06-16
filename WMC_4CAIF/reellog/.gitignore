@@ -9,10 +9,6 @@ __pycache__/
 venv/
 env/
 
-# SQLite database (instance folder)
-instance/
-*.db
-
 # Tailwind standalone binary (download per README)
 tailwindcss
 tailwindcss-*
