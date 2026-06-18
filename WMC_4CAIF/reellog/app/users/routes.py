@@ -110,6 +110,7 @@ def diary(username: str):
         except ValueError:
             year = None
         if year:
+            # Jahresfilter direkt in der Datenbank, nicht erst im Template.
             query = query.filter(
                 LogEntry.watched_on >= date(year, 1, 1),
                 LogEntry.watched_on <= date(year, 12, 31),
@@ -208,6 +209,7 @@ def stats(username: str):
     rated_logs = [log for log in logs if log.rating]
     histogram = [0] * 10
     for log in rated_logs:
+        # rating 1-10 wird zu Index 0-9 fuer die Statistik.
         histogram[log.rating - 1] += 1
 
     year_counts = Counter(log.watched_on.year for log in logs if log.watched_on)

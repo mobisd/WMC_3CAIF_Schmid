@@ -1,1 +1,1 @@
-"""People blueprint package."""
+"""People-Package: Detailseiten fuer Schauspieler/Personen."""

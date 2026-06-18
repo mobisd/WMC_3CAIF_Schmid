@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import io
-import re
-import zipfile
 
 from app.extensions import db
 from app.images import effective_backdrop_url, effective_poster_url
@@ -10,6 +8,7 @@ from app.models import Film, LogEntry, User, UserFavoriteFilm, UserFilmImage, Wa
 
 
 def _fake_images(_tmdb_id):
+    # Fake-TMDB-Antwort, damit Tests nicht vom Internet abhaengen.
     return {
         "posters": [{"file_path": "/poster-a.jpg"}, {"file_path": "/poster-b.jpg"}],
         "backdrops": [{"file_path": "/back-a.jpg"}, {"file_path": "/back-b.jpg"}],
@@ -259,80 +258,6 @@ def test_trending_uses_custom_poster(auth_client, user, film, monkeypatch):
     body = resp.data.decode()
     assert resp.status_code == 200
     assert "/custom-trending.jpg" in body
-
-
-def test_letterboxd_import_zip(auth_client, user, monkeypatch):
-    imported_film = Film(
-        tmdb_id=321,
-        title="Imported Movie",
-        release_year=2024,
-        poster_path="/imported.jpg",
-    )
-    watchlist_film = Film(
-        tmdb_id=654,
-        title="Watch Later",
-        release_year=2025,
-        poster_path="/watch.jpg",
-    )
-    db.session.add_all([imported_film, watchlist_film])
-    db.session.commit()
-
-    def fake_search_movies(query, page=1):
-        if query == "Imported Movie":
-            return {"results": [{"tmdb_id": 321, "title": query, "release_year": 2024}], "page": 1, "total_pages": 1}
-        if query == "Watch Later":
-            return {"results": [{"tmdb_id": 654, "title": query, "release_year": 2025}], "page": 1, "total_pages": 1}
-        return {"results": [], "page": 1, "total_pages": 0}
-
-    monkeypatch.setattr("app.letterboxd_import.search_movies", fake_search_movies)
-    monkeypatch.setattr("app.letterboxd_import.ensure_film_cached", lambda tmdb_id: db.session.get(Film, tmdb_id))
-
-    payload = io.BytesIO()
-    with zipfile.ZipFile(payload, "w") as archive:
-        archive.writestr(
-            "letterboxd-export/reviews.csv",
-            "Date,Name,Year,Letterboxd URI,Rating,Rewatch,Review,Tags,Watched Date\n"
-            "2026-01-02,Imported Movie,2024,https://boxd.it/test,4.5,,Great import,,2026-01-01\n",
-        )
-        archive.writestr(
-            "letterboxd-export/likes/films.csv",
-            "Date,Name,Year,Letterboxd URI\n"
-            "2026-01-02,Imported Movie,2024,https://boxd.it/test\n",
-        )
-        archive.writestr(
-            "letterboxd-export/watchlist.csv",
-            "Date,Name,Year,Letterboxd URI\n"
-            "2026-01-03,Watch Later,2025,https://boxd.it/watch\n",
-        )
-    payload.seek(0)
-
-    preview_resp = auth_client.post(
-        "/settings",
-        data={
-            "form_type": "letterboxd_preview",
-            "letterboxd_export": (payload, "letterboxd-export.zip"),
-        },
-        content_type="multipart/form-data",
-    )
-    assert preview_resp.status_code == 200
-    body = preview_resp.data.decode()
-    assert "Ready to import" in body
-    token = re.search(r'name="import_token" value="([^"]+)"', body).group(1)
-
-    resp = auth_client.post(
-        "/settings",
-        data={
-            "form_type": "letterboxd_import",
-            "import_token": token,
-        },
-    )
-
-    assert resp.status_code == 302
-    log = LogEntry.query.filter_by(user_id=user.id, film_id=321).one()
-    assert log.rating == 9
-    assert log.review == "Great import"
-    assert log.liked is True
-    assert WatchlistItem.query.filter_by(user_id=user.id, film_id=654).one()
 
 
 def test_diary_filters_by_rating_and_liked(auth_client, user, film):

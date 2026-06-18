@@ -1,4 +1,4 @@
-"""TMDB client and local caching."""
+"""TMDB-Anbindung: holt Filmdaten von der API und cached sie lokal."""
 from __future__ import annotations
 
 import logging
@@ -21,6 +21,7 @@ class TMDBError(Exception):
 
 
 def _get(path: str, **params) -> Optional[dict]:
+    # Kleine gemeinsame Request-Funktion fuer alle TMDB-Endpunkte.
     cfg = current_app.config
     params["api_key"] = cfg["TMDB_API_KEY"]
     url = f"{cfg['TMDB_API_BASE']}{path}"
@@ -79,6 +80,7 @@ def search_movies(query: str, page: int = 1) -> dict:
 
 
 def trending_movies() -> list[dict]:
+    # Startseite: zuerst Trending, als Fallback Popular oder lokale DB.
     data = _get("/trending/movie/week")
     if not data:
         data = _get("/movie/popular")

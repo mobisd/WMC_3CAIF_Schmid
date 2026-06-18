@@ -1,4 +1,4 @@
-"""Avatar upload helper."""
+"""Upload-Helfer fuer Avatare: Groesse, Dateityp und Dateiname pruefen."""
 from __future__ import annotations
 
 import os
@@ -15,6 +15,7 @@ class UploadError(ValueError):
 
 
 def save_avatar(file_storage) -> str:
+    # Speichert nur erlaubte Bilddateien und gibt danach die /uploads/-URL zurueck.
     if file_storage is None or not file_storage.filename:
         raise UploadError("No file selected.")
 

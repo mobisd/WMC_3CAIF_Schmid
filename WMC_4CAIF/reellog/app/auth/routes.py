@@ -1,4 +1,4 @@
-"""Authentication blueprint."""
+"""Login, Registrierung und Logout."""
 from __future__ import annotations
 
 from flask import (
@@ -25,6 +25,7 @@ auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
+    # Registrierung validiert erst alles und speichert dann den neuen User.
     if current_user.is_authenticated:
         return redirect(url_for("films.index"))
 
@@ -72,6 +73,7 @@ def register():
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    # Login geht mit Username oder E-Mail.
     if current_user.is_authenticated:
         return redirect(url_for("films.index"))
 

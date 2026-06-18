@@ -97,6 +97,7 @@ def film(tmdb_id: int):
             .order_by(LogEntry.created_at.desc())
             .all()
         )
+        # Der neueste Eintrag ist der aktuelle Status fuer Button und Rating.
         current_log = my_logs[0] if my_logs else None
         user_state = {
             "in_watchlist": current_user.in_watchlist(tmdb_id),

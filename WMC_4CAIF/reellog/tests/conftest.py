@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+# Test-Umgebung: eigene Secrets setzen, damit keine echte .env noetig ist.
 os.environ.setdefault("SECRET_KEY", "test-secret")
 os.environ.setdefault("TMDB_API_KEY", "test-tmdb")
 
@@ -14,6 +15,7 @@ from app.models import Film, User
 
 
 class TestConfig(Config):
+    # Tests laufen mit einer frischen In-Memory-Datenbank.
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     WTF_CSRF_ENABLED = False
@@ -46,6 +48,7 @@ def user(app):
 
 @pytest.fixture
 def auth_client(client, user):
+    # Client ist danach schon eingeloggt.
     client.post("/login", data={"identifier": "alice", "password": "password123"})
     return client
 

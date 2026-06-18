@@ -1,3 +1,4 @@
+{# Settings-Seite: Profil, Passwort, Avatar, Backdrop und Lieblingsfilme. #}
 {% extends "base.html" %}
 {% from "partials/macros.html" import avatar with context %}
 {% block title %}Settings - ReelLog{% endblock %}
@@ -16,7 +17,6 @@
       <aside class="rounded-lg border border-line bg-surface/40 p-2 text-sm lg:sticky lg:top-20">
         <button type="button" class="settings-tab is-active" data-settings-tab="profile">Profile</button>
         <button type="button" class="settings-tab" data-settings-tab="images">Images</button>
-        <button type="button" class="settings-tab" data-settings-tab="data">Data</button>
         <button type="button" class="settings-tab" data-settings-tab="account">Account</button>
       </aside>
 
@@ -92,48 +92,6 @@
           <button type="submit" class="btn-primary">Save profile</button>
         </form>
 
-        <form id="import-settings" method="post" action="{{ url_for('users.settings') }}" enctype="multipart/form-data" class="card hidden space-y-4 p-6" data-settings-panel="data">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          <input type="hidden" name="form_type" value="letterboxd_preview" />
-          <div>
-            <h2 class="font-title text-2xl font-semibold">Import Letterboxd</h2>
-            <p class="mt-1 text-sm text-text-mute">Upload your export ZIP, preview what is inside, then confirm the import.</p>
-          </div>
-          {% if import_preview %}
-            <div class="rounded-lg border border-accent/40 bg-accent/10 p-4" data-import-preview>
-              <div class="mb-3 flex items-baseline justify-between gap-3 border-b border-accent/25 pb-2">
-                <h3 class="font-semibold">Ready to import</h3>
-                <span class="text-sm tabular-nums text-text-dim">{{ import_preview.total_rows }} rows found</span>
-              </div>
-              <dl class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-                <div><dt class="text-text-mute">Diary</dt><dd class="font-title text-2xl font-semibold">{{ import_preview.diary_rows }}</dd></div>
-                <div><dt class="text-text-mute">Reviews</dt><dd class="font-title text-2xl font-semibold">{{ import_preview.review_rows }}</dd></div>
-                <div><dt class="text-text-mute">Ratings</dt><dd class="font-title text-2xl font-semibold">{{ import_preview.rating_rows }}</dd></div>
-                <div><dt class="text-text-mute">Watched</dt><dd class="font-title text-2xl font-semibold">{{ import_preview.watched_rows }}</dd></div>
-                <div><dt class="text-text-mute">Watchlist</dt><dd class="font-title text-2xl font-semibold">{{ import_preview.watchlist_rows }}</dd></div>
-                <div><dt class="text-text-mute">Likes</dt><dd class="font-title text-2xl font-semibold">{{ import_preview.liked_rows }}</dd></div>
-              </dl>
-            </div>
-          {% endif %}
-          <div>
-            <label class="label" for="letterboxd_export">Letterboxd export ZIP</label>
-            <input class="input" id="letterboxd_export" name="letterboxd_export" type="file" accept=".zip,application/zip,application/x-zip-compressed" required />
-          </div>
-          <button type="submit" class="btn-primary">Preview import</button>
-        </form>
-
-        {% if import_preview and import_token %}
-          <form method="post" action="{{ url_for('users.settings') }}" class="card hidden space-y-4 p-6" data-settings-panel="data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="form_type" value="letterboxd_import" />
-            <input type="hidden" name="import_token" value="{{ import_token }}" />
-            <div>
-              <h2 class="font-title text-2xl font-semibold">Confirm import</h2>
-              <p class="mt-1 text-sm text-text-mute">This will merge the previewed Letterboxd data into your ReelLog account.</p>
-            </div>
-            <button type="submit" class="btn-accent">Import data now</button>
-          </form>
-        {% endif %}
 
         <form id="security-settings" method="post" action="{{ url_for('users.settings') }}" class="card hidden space-y-4 p-6" data-settings-panel="account">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />

@@ -185,6 +185,8 @@ class UserFilmImage(db.Model):
     """Per-user preferred poster/backdrop for one film."""
 
     __tablename__ = "user_film_images"
+    # Pro User und Film darf es nur eine Zeile geben, sonst waere unklar,
+    # welches Bild angezeigt werden soll.
     __table_args__ = (
         db.UniqueConstraint("user_id", "film_id", name="uq_user_film_image"),
     )
@@ -223,8 +225,10 @@ class LogEntry(db.Model):
 
     @property
     def stars(self):
+        # Intern speichere ich 1-10, angezeigt wird es als 0.5-5 Sterne.
         return None if self.rating is None else self.rating / 2
 
     @property
     def has_review(self) -> bool:
+        # Leere Reviews sollen nicht als echte Reviews aufscheinen.
         return bool((self.review or "").strip())

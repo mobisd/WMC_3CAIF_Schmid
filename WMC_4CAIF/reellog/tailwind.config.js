@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-// Design tokens live here so colour/font usage stays consistent across the app.
+// Design-Tokens: Farben, Fonts und Breiten bleiben dadurch ueberall gleich.
 module.exports = {
   content: ["./app/templates/**/*.html", "./app/static/js/**/*.js"],
   theme: {

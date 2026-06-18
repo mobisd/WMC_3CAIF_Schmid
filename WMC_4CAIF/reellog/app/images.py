@@ -13,6 +13,7 @@ def _image_url(path: str | None, size: str, fallback: str) -> str:
 
 
 def image_override_for(user: User | None, film_id: int) -> UserFilmImage | None:
+    # Nur eingeloggte User koennen eigene Film-Bilder haben.
     if not user or not getattr(user, "is_authenticated", False):
         return None
     return UserFilmImage.query.filter_by(user_id=user.id, film_id=film_id).first()
@@ -20,6 +21,7 @@ def image_override_for(user: User | None, film_id: int) -> UserFilmImage | None:
 
 def effective_image_paths(film: Film, user: User | None = None) -> dict:
     override = image_override_for(user, film.tmdb_id)
+    # Erst eigenes Bild nehmen, sonst normales TMDB-Bild.
     return {
         "poster_path": override.poster_path if override and override.poster_path else film.poster_path,
         "backdrop_path": override.backdrop_path if override and override.backdrop_path else film.backdrop_path,

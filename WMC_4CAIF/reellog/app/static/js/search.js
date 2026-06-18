@@ -1,3 +1,4 @@
+// Live-Suche in der Navigation: sucht Accounts und Filme per API.
 import { api } from "./api.js";
 
 const form = document.querySelector("[data-live-search]");
@@ -14,6 +15,7 @@ if (form) {
   }
 
   function render(data) {
+    // Ergebnisse werden komplett neu aufgebaut, damit alte Treffer verschwinden.
     const results = data.results || [];
     const users = data.users || [];
     panel.replaceChildren();

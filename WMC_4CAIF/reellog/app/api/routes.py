@@ -163,6 +163,8 @@ def update_film_images(tmdb_id: int):
 
     images = get_movie_images(tmdb_id)
     allowed_key = "posters" if field == "poster" else "backdrops"
+    # Nicht irgendeinen Pfad speichern, sondern nur Bilder, die TMDB fuer
+    # diesen Film wirklich zurueckgibt.
     if path is not None and path not in {item["file_path"] for item in images[allowed_key]}:
         return _err("Choose a valid TMDB image.", 422)
 
@@ -204,6 +206,7 @@ def _serialize_log(log: LogEntry) -> dict:
 def _read_log_fields(payload: dict, *, partial: bool = False) -> dict:
     fields = {}
 
+    # Diese Funktion sammelt nur gepruefte Werte, bevor etwas gespeichert wird.
     if not partial or "rating" in payload:
         fields["rating"] = parse_rating(payload.get("rating"))
     if not partial or "watched_on" in payload:
@@ -256,6 +259,8 @@ def create_log():
         return _err(str(exc), 422)
 
     is_rewatch = bool(payload.get("is_rewatch", False))
+    # Normales Loggen aktualisiert den aktuellen Eintrag.
+    # Bei Rewatch wird absichtlich ein neuer Diary-Eintrag erstellt.
     log = None if is_rewatch else _current_log(current_user.id, tmdb_id)
     created = log is None
     if log is None:
@@ -303,6 +308,7 @@ def delete_log(log_id: int):
     log = db.session.get(LogEntry, log_id)
     if log is None:
         return _err("Log not found.", 404)
+    # Wichtig: Man darf nur eigene Eintraege loeschen.
     if log.user_id != current_user.id:
         return _err("You can only delete your own logs.", 403)
 

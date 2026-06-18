@@ -1,4 +1,4 @@
-"""Flask extension singletons."""
+"""Gemeinsame Flask-Erweiterungen, die in create_app initialisiert werden."""
 from __future__ import annotations
 
 from flask_login import LoginManager

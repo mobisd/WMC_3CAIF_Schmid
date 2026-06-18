@@ -12,6 +12,7 @@ if (panel) {
 
     function valueFromEvent(starIndex, e) {
       const rect = stars[starIndex].getBoundingClientRect();
+      // Linke Sternhaelfte = halber Stern, rechte Haelfte = ganzer Stern.
       return starIndex * 2 + (e.clientX - rect.left < rect.width / 2 ? 1 : 2);
     }
 
@@ -110,6 +111,7 @@ if (panel) {
     function openLog(log, forceRewatch = false) {
       errorEl.classList.add("hidden");
       form.reset();
+      // Wenn ein Log uebergeben wird, wird bearbeitet, sonst neu erstellt.
       if (log && !forceRewatch) {
         editingId = log.id;
         titleEl.textContent = "Edit entry";
@@ -189,6 +191,7 @@ if (panel) {
       grid.innerHTML = "";
       selectedPath = null;
       saveBtn.disabled = true;
+      // Je nach Modus werden Poster oder Backdrops in dasselbe Modal geladen.
       const items = mode === "poster" ? imagesPayload.posters : imagesPayload.backdrops;
       const current = mode === "poster" ? panel.dataset.userPosterPath : panel.dataset.userBackdropPath;
       const fallback = mode === "poster" ? panel.dataset.defaultPosterPath : panel.dataset.defaultBackdropPath;
@@ -238,6 +241,7 @@ if (panel) {
     saveBtn.addEventListener("click", async () => {
       if (!selectedPath) return;
       try {
+        // Speichern geht ans Backend, damit dort nochmal validiert wird.
         await api.patch(`/api/film-images/${tmdbId}`, {
           field: mode,
           path: selectedPath,
@@ -266,6 +270,7 @@ if (panel) {
     let deleteId = null;
 
     window.openDeleteDialog = (id) => {
+      // Die ID wird gemerkt, geloescht wird erst nach der Bestaetigung.
       deleteId = id;
       error.classList.add("hidden");
       openDialog(deleteDialog, confirmBtn);

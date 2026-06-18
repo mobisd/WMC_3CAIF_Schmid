@@ -1,4 +1,4 @@
-"""Validation helpers."""
+"""Validierung fuer Formulare und API-Werte."""
 from __future__ import annotations
 
 import re
@@ -63,6 +63,7 @@ def url_error(url: str, max_len: int = 500) -> str | None:
 
 
 def parse_rating(value) -> int | None:
+    # Rating wird als 1-10 gespeichert, damit halbe Sterne moeglich sind.
     if value is None or value == "":
         return None
     try:
@@ -75,6 +76,7 @@ def parse_rating(value) -> int | None:
 
 
 def parse_watched_on(value) -> date | None:
+    # Datum darf leer sein, aber nicht falsch formatiert oder in der Zukunft.
     if not value:
         return None
     try:

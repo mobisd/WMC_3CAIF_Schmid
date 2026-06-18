@@ -1,4 +1,4 @@
-"""Application factory."""
+"""Erstellt die Flask-App und haengt Datenbank, Login, CSRF und Blueprints ein."""
 from __future__ import annotations
 
 import click
@@ -9,6 +9,7 @@ from .extensions import csrf, db, login_manager
 
 
 def create_app(config_class: type = Config) -> Flask:
+    # Zentrale Stelle, an der die App zusammengebaut wird.
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
 
@@ -18,6 +19,7 @@ def create_app(config_class: type = Config) -> Flask:
 
     from . import models  # noqa: F401
     with app.app_context():
+        # Fuer das Schulprojekt werden fehlende Tabellen automatisch angelegt.
         db.create_all()
 
     from .api.routes import api_bp
@@ -71,6 +73,7 @@ def _register_template_globals(app: Flask) -> None:
 
     @app.context_processor
     def inject_globals():
+        # Diese Werte/Funktionen sind dadurch in allen Templates verfuegbar.
         today = date.today()
         return {
             "current_year": today.year,

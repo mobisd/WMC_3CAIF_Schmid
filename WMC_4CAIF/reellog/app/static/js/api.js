@@ -5,6 +5,7 @@ function csrfToken() {
 }
 
 async function request(method, url, body) {
+  // Ein gemeinsamer Fetch-Helper, damit CSRF und JSON nicht ueberall doppelt stehen.
   const opts = {
     method,
     headers: {

@@ -1,4 +1,4 @@
-"""Application configuration."""
+"""Konfiguration: env-Datei, Datenbank, TMDB, Cookies und Limits."""
 from __future__ import annotations
 
 import os
@@ -14,6 +14,7 @@ INSTANCE_DIR.mkdir(exist_ok=True)
 
 
 def _require(name: str) -> str:
+    # SECRET_KEY und TMDB_API_KEY muessen gesetzt sein, sonst startet die App nicht.
     value = os.environ.get(name, "").strip()
     if not value:
         raise RuntimeError(
@@ -24,6 +25,7 @@ def _require(name: str) -> str:
 
 
 class Config:
+    # Alles, was Flask oder eigene Helper spaeter aus current_app.config lesen.
     SECRET_KEY = _require("SECRET_KEY")
 
     SQLALCHEMY_DATABASE_URI = os.environ.get(

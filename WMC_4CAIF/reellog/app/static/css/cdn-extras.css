@@ -1,3 +1,4 @@
+/* Fallback-CSS, wenn Tailwind ueber CDN genutzt wird. */
 .btn {
   display: inline-flex;
   align-items: center;

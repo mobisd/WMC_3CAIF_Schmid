@@ -1,3 +1,4 @@
+// Kleine Helfer fuer Dialoge, damit Modal-Code nicht ueberall doppelt steht.
 export function wireDialog(dialog) {
   if (!dialog) return;
 
@@ -32,6 +33,7 @@ export function wireDialog(dialog) {
 }
 
 export function openDialog(dialog, initialFocus) {
+  // Nach dem Oeffnen wird direkt ein sinnvoller Button/Input fokussiert.
   dialog.showModal();
   setTimeout(() => (initialFocus || dialog.querySelector("button, input"))?.focus(), 0);
 }

@@ -1,3 +1,4 @@
+// JavaScript fuer Settings: Tabs, Favoriten-Suche und Profil-Backdrop-Auswahl.
 import { api } from "./api.js";
 import { openDialog, wireDialog } from "./modal-utils.js";
 
@@ -5,9 +6,10 @@ const tabsRoot = document.querySelector("[data-settings-tabs]");
 if (tabsRoot) {
   const tabs = [...tabsRoot.querySelectorAll("[data-settings-tab]")];
   const panels = [...tabsRoot.querySelectorAll("[data-settings-panel]")];
-  const initial = document.querySelector("[data-import-preview]") ? "data" : "profile";
+  const initial = "profile";
 
   function showTab(name) {
+    // Nur der aktive Settings-Bereich bleibt sichtbar.
     tabs.forEach((tab) => {
       const active = tab.dataset.settingsTab === name;
       tab.classList.toggle("is-active", active);
@@ -55,6 +57,7 @@ if (dialog) {
   }
 
   function resetPicker() {
+    // Nach jedem Oeffnen startet die Backdrop-Auswahl sauber neu.
     selectedFilm = null;
     selectedBackdrop = null;
     results.innerHTML = "";

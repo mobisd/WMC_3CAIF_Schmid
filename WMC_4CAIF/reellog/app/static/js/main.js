@@ -1,7 +1,9 @@
-import "./search.js"; // wires up the nav live search on every page.
+// Allgemeines JavaScript fuer jede Seite: Suche, Flash-Messages, Menue und Avatar-Dialog.
+import "./search.js"; // startet die Live-Suche in der Navigation.
 import { openDialog, wireDialog } from "./modal-utils.js";
 
 function initFlashes() {
+  // Flash-Messages verschwinden nach ein paar Sekunden automatisch.
   const container = document.getElementById("flash-container");
   if (!container) return;
   container.querySelectorAll(".flash").forEach((el) => {
@@ -14,6 +16,7 @@ function initFlashes() {
 }
 
 function initMenu() {
+  // User-Menue schliessen, wenn man daneben klickt oder Escape drueckt.
   const menu = document.querySelector("[data-menu]");
   if (!menu) return;
   document.addEventListener("click", (e) => {

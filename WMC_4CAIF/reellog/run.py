@@ -1,8 +1,8 @@
-"""Entry point. Run with `flask --app run run` or `python run.py`."""
+"""Startdatei fuer die Flask-App."""
 from app import create_app
 
 app = create_app()
 
 if __name__ == "__main__":
-    # debug=True is for local development only (see README prod notes).
+    # debug=True ist nur fuer lokale Entwicklung gedacht.
     app.run(host="127.0.0.1", port=5000, debug=True)
