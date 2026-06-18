@@ -1,0 +1,68 @@
+{# Shared banner + avatar + stats + tab nav for all profile sub-pages.
+   `active` is one of: activity, films, diary, watchlist, reviews. #}
+{% from "partials/macros.html" import avatar %}
+{% set is_own = current_user.is_authenticated and current_user.id == user.id %}
+
+<section class="-mx-4 -mt-8">
+  {# --- Backdrop banner: faded at the bottom into --bg ---------------- #}
+  <div class="relative h-44 w-full overflow-hidden sm:h-60">
+    {% if user.backdrop_url %}
+      <img src="{{ user.backdrop_url }}" alt="" class="h-full w-full object-cover object-top" />
+    {% else %}
+      {# Designed fallback, not an empty void. #}
+      <div class="h-full w-full bg-gradient-to-br from-surface-2 via-surface to-bg"></div>
+    {% endif %}
+    <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/60 to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-bg/40 to-transparent"></div>
+  </div>
+
+  <div class="relative z-10 mx-auto max-w-shell px-4">
+    <div class="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
+      <div class="flex items-end gap-4">
+        {{ avatar(user, "h-24 w-24 border-4 border-bg", "text-3xl") }}
+        <div class="pb-1">
+          <h1 class="font-title text-2xl font-bold sm:text-3xl">{{ user.name }}</h1>
+          <p class="text-sm text-text-mute">@{{ user.username }}</p>
+        </div>
+      </div>
+      {% if is_own %}
+        <a href="{{ url_for('users.settings') }}" class="btn-ghost self-start sm:self-auto">Edit profile</a>
+      {% endif %}
+    </div>
+
+    {% if user.bio %}<p class="mt-4 max-w-2xl text-sm leading-relaxed text-text-dim">{{ user.bio }}</p>{% endif %}
+
+    {# --- Stats strip: big number over a tiny uppercase label ---------- #}
+    <dl class="mt-5 flex flex-wrap gap-x-8 gap-y-3 [font-variant-numeric:tabular-nums]">
+      {% set stats = [
+        ('Films', user.films_watched),
+        ('This year', user.films_watched_this_year),
+        ('Reviews', user.review_count),
+        ('Watchlist', user.watchlist_count),
+      ] %}
+      {% for label, value in stats %}
+        <div>
+          <dd class="font-title text-2xl font-semibold leading-none">{{ value }}</dd>
+          <dt class="mt-1 text-xs uppercase tracking-widest text-text-mute">{{ label }}</dt>
+        </div>
+        {% if not loop.last %}<div class="h-8 w-px bg-line"></div>{% endif %}
+      {% endfor %}
+    </dl>
+
+    {# --- Tab nav ------------------------------------------------------ #}
+    <nav class="mt-6 flex gap-1 overflow-x-auto border-b border-border text-sm" aria-label="Profile sections">
+      {% set tabs = [
+        ('activity', 'Activity', url_for('users.profile', username=user.username)),
+        ('films', 'Films', url_for('users.films', username=user.username)),
+        ('diary', 'Diary', url_for('users.diary', username=user.username)),
+        ('reviews', 'Reviews', url_for('users.profile', username=user.username) ~ '#reviews'),
+        ('watchlist', 'Watchlist', url_for('users.watchlist', username=user.username)),
+      ] %}
+      {% for key, label, href in tabs %}
+        <a href="{{ href }}"
+           class="-mb-px shrink-0 border-b-2 px-3 py-2 {% if key == active %}border-accent text-text{% else %}border-transparent text-text-dim hover:text-text{% endif %}"
+           {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+  </div>
+</section>

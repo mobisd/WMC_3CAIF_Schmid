@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import stars_display, empty_state %}
+{% block title %}{{ user.name }}'s diary - ReelLog{% endblock %}
+
+{% block content %}
+  {% set active = 'diary' %}
+  {% include "partials/profile_header.html" %}
+
+  <div class="mx-auto mt-8 max-w-shell">
+    {% if logs %}
+      <ul>
+        {% for log in logs %}
+          <li class="grid grid-cols-[3.5rem_2.5rem_minmax(0,1fr)_auto] items-start gap-3 border-b border-line py-4">
+            <div class="text-xs uppercase tracking-[0.18em] text-mute">
+              {% if log.watched_on %}
+                <span class="block text-sm font-semibold text-dim [font-variant-numeric:tabular-nums]">{{ log.watched_on.strftime('%d') }}</span>
+                <span>{{ log.watched_on.strftime('%b') }}</span>
+              {% else %}
+                <span>Date</span>
+              {% endif %}
+            </div>
+            <a href="{{ url_for('films.film', tmdb_id=log.film.tmdb_id) }}" class="poster w-10 shrink-0">
+              <img src="{{ log.film.poster_url('w185') }}" alt="{{ log.film.title }} poster" loading="lazy" />
+            </a>
+            <div class="min-w-0">
+              <a href="{{ url_for('films.film', tmdb_id=log.film.tmdb_id) }}" class="font-medium hover:text-accent">
+                {{ log.film.title }}{% if log.film.release_year %} <span class="text-text-mute">{{ log.film.release_year }}</span>{% endif %}
+              </a>
+              <p class="text-xs text-text-mute">
+                {% if log.is_rewatch %}rewatch{% endif %}
+                {% if log.contains_spoilers %}{% if log.is_rewatch %} · {% endif %}spoilers{% endif %}
+              </p>
+              {% if log.review %}
+                <p class="mt-1 line-clamp-2 whitespace-pre-line text-sm text-text-dim">{{ log.review }}</p>
+              {% endif %}
+            </div>
+            <span class="flex shrink-0 items-center gap-2 text-sm">
+              {{ stars_display(log.rating) }}
+              {% if log.liked %}<span class="text-like">♥</span>{% endif %}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {{ empty_state("This diary is empty - no films logged yet.") }}
+    {% endif %}
+  </div>
+{% endblock %}

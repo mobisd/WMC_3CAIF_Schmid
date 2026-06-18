@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import poster_card, film_poster, stars_display, empty_state %}
+{% block title %}ReelLog — your film diary{% endblock %}
+
+{% block content %}
+  <section class="mb-12">
+    <h1 class="font-title text-4xl font-bold sm:text-5xl">
+      Keep a diary of every film you watch.
+    </h1>
+    <p class="mt-3 max-w-2xl text-text-dim">
+      Track what you’ve seen, rate it ½–5 stars, write reviews, and build a
+      watchlist. A small, calm film log for our school.
+    </p>
+    {% if not current_user.is_authenticated %}
+      <div class="mt-6 flex gap-3">
+        <a href="{{ url_for('auth.register') }}" class="btn-primary">Get started</a>
+        <a href="{{ url_for('films.search') }}" class="btn-ghost">Browse films</a>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if current_user.is_authenticated and recent_logs %}
+    <section class="mb-12">
+      <h2 class="mb-4 font-title text-2xl font-semibold">Your recent activity</h2>
+      <div class="poster-grid">
+        {% for log in recent_logs %}
+          {{ film_poster(log.film, log.rating, log.liked) }}
+        {% endfor %}
+      </div>
+      <a
+        href="{{ url_for('users.diary', username=current_user.username) }}"
+        class="mt-3 inline-block text-sm text-text-dim hover:text-accent"
+        >See full diary →</a
+      >
+    </section>
+  {% endif %}
+
+  <section>
+    <h2 class="mb-4 font-title text-2xl font-semibold">Trending this week</h2>
+    {% if trending %}
+      <div class="poster-grid">
+        {% for item in trending %}{{ poster_card(item) }}{% endfor %}
+      </div>
+    {% else %}
+      {{ empty_state("Couldn’t reach TMDB right now. Try a search instead.", "📡") }}
+    {% endif %}
+  </section>
+{% endblock %}

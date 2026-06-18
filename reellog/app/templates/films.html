@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import film_poster, section_label, empty_state %}
+{% block title %}{{ user.name }}’s films — ReelLog{% endblock %}
+
+{% block content %}
+  {% set active = 'films' %}
+  {% include "partials/profile_header.html" %}
+
+  <section class="mt-8">
+    {{ section_label("All films", more_text="") }}
+    {% if films %}
+      <div class="poster-grid mt-3">
+        {% for film in films %}{{ film_poster(film) }}{% endfor %}
+      </div>
+    {% else %}
+      {{ empty_state("No films logged yet.", "🎬") }}
+    {% endif %}
+  </section>
+{% endblock %}
