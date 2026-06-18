@@ -23,7 +23,7 @@ if (tabsRoot) {
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => showTab(tab.dataset.settingsTab));
   });
-  showTab(window.location.hash === "#import-settings" ? "data" : initial);
+  showTab(initial);
 }
 
 document.querySelectorAll("form").forEach((form) => {
