@@ -8,8 +8,6 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import date
-from pathlib import Path
-import secrets
 
 from flask import (
     Blueprint,
@@ -25,11 +23,6 @@ from sqlalchemy.orm import joinedload
 
 from ..config import Config
 from ..extensions import db
-from ..letterboxd_import import (
-    LetterboxdImportError,
-    import_letterboxd_bytes,
-    preview_letterboxd_zip,
-)
 from ..models import LogEntry, User, UserFavoriteFilm, WatchlistItem
 from ..tmdb import TMDBError, ensure_film_cached
 from ..uploads import UploadError, save_avatar
@@ -256,10 +249,6 @@ def settings():
 
         if form_type == "password":
             return _handle_password_change()
-        if form_type == "letterboxd_preview":
-            return _handle_letterboxd_preview()
-        if form_type == "letterboxd_import":
-            return _handle_letterboxd_import()
         return _handle_profile_update()
 
     return render_template("settings.html", user=current_user)
@@ -367,62 +356,3 @@ def _handle_password_change():
     db.session.commit()
     flash("Password changed.", "success")
     return redirect(url_for("users.settings"))
-
-
-def _handle_letterboxd_import():
-    token = request.form.get("import_token", "")
-    path = _pending_import_path(token)
-    if not token or path is None or not path.exists():
-        flash("Preview your Letterboxd ZIP before importing.", "error")
-        return redirect(url_for("users.settings") + "#import-settings")
-
-    try:
-        summary = import_letterboxd_bytes(path.read_bytes(), current_user)
-    except LetterboxdImportError as exc:
-        flash(str(exc), "error")
-        return redirect(url_for("users.settings") + "#import-settings")
-    finally:
-        path.unlink(missing_ok=True)
-
-    flash(
-        "Imported Letterboxd data: "
-        f"{summary.logs_added} logs added, "
-        f"{summary.logs_updated} logs updated, "
-        f"{summary.watchlist_added} watchlist items added"
-        + (f", {summary.films_skipped} films skipped." if summary.films_skipped else "."),
-        "success",
-    )
-    return redirect(url_for("users.settings") + "#import-settings")
-
-
-def _handle_letterboxd_preview():
-    export_file = request.files.get("letterboxd_export")
-    if not export_file or not export_file.filename:
-        flash("Choose your Letterboxd export ZIP.", "error")
-        return redirect(url_for("users.settings") + "#import-settings")
-
-    raw = export_file.read()
-    try:
-        preview = preview_letterboxd_zip(raw)
-    except LetterboxdImportError as exc:
-        flash(str(exc), "error")
-        return redirect(url_for("users.settings") + "#import-settings")
-
-    token = secrets.token_urlsafe(24)
-    path = _pending_import_path(token, create=True)
-    path.write_bytes(raw)
-    return render_template(
-        "settings.html",
-        user=current_user,
-        import_preview=preview,
-        import_token=token,
-    )
-
-
-def _pending_import_path(token: str, create: bool = False) -> Path | None:
-    if not token or any(ch in token for ch in ("/", "\\", ".")):
-        return None
-    folder = Path(Config.UPLOAD_DIR) / "imports"
-    if create:
-        folder.mkdir(parents=True, exist_ok=True)
-    return folder / f"{current_user.id}-{token}.zip"
