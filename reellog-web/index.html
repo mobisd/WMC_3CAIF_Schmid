@@ -1,0 +1,1082 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ReelLog</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&display=swap">
+<style>
+  /* ===========================================================================
+     ReelLog — a film diary. Pure HTML/CSS/JS, no backend, no build.
+     Layout: full-bleed cinematic dark app; sticky translucent nav; grid of
+     generated poster artwork; detail view with backdrop hero + action panel.
+     Deliberate single dark theme (a film app lives in the dark).
+     ------------------------------------------------------------------------- */
+  :root {
+    /* Color — warm-biased neutrals (Apple system greys) + one gold accent */
+    --bg:        #0a0a0c;
+    --bg-2:      #0f0f12;
+    --surface:   #161619;
+    --surface-2: #202024;
+    --line:      rgba(255,255,255,0.09);
+    --line-2:    rgba(255,255,255,0.14);
+    --fg:        #f5f5f7;   /* Apple off-white */
+    --dim:       #a1a1a6;   /* Apple secondary */
+    --mute:      #6e6e73;   /* Apple tertiary  */
+    --accent:    #e8b33e;   /* gold — ratings, focus, one action */
+    --accent-2:  #ffcf5c;
+    --like:      #ff5a7a;   /* rose heart */
+    --good:      #4cd07d;
+
+    /* Type */
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+            "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+    /* Motion — Apple-ish easing */
+    --ease:   cubic-bezier(0.22, 1, 0.36, 1);
+    --spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+    --shell: 1120px;
+
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  /* Ambient glow behind everything — quiet, cinematic */
+  .bg-fx {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(60rem 40rem at 78% -10%, rgba(232,179,62,0.10), transparent 60%),
+      radial-gradient(50rem 40rem at 12% 8%, rgba(90,120,255,0.06), transparent 55%),
+      linear-gradient(180deg, var(--bg-2), var(--bg) 40%);
+  }
+  /* Safe-area band above a sticky header (phone app) */
+  body::before {
+    content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+    z-index: 60; background: rgba(10,10,12,0.8); backdrop-filter: blur(20px);
+  }
+
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+  [hidden] { display: none !important; }
+  button { font-family: inherit; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+  .wrap {
+    width: 100%; max-width: var(--shell); margin-inline: auto;
+    padding-inline: max(20px, env(safe-area-inset-left, 0px)) max(20px, env(safe-area-inset-right, 0px));
+  }
+
+  /* ---- Nav ---------------------------------------------------------------- */
+  .nav {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
+    background: rgba(10,10,12,0.66);
+    backdrop-filter: saturate(180%) blur(22px);
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-in {
+    display: flex; align-items: center; gap: 18px; height: 54px;
+    width: 100%; max-width: var(--shell); margin-inline: auto;
+    padding-inline: max(20px, env(safe-area-inset-left, 0px)) max(20px, env(safe-area-inset-right, 0px));
+  }
+  .brand {
+    font-weight: 700; font-size: 19px; letter-spacing: -0.02em;
+    display: inline-flex; align-items: center; gap: 8px; flex: none;
+  }
+  .brand .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 14px var(--accent); }
+  .nav-links { display: flex; gap: 2px; }
+  .nav-links a {
+    font-size: 14px; color: var(--dim); padding: 6px 11px; border-radius: 999px;
+    transition: color .2s var(--ease), background .2s var(--ease);
+  }
+  .nav-links a:hover { color: var(--fg); }
+  .nav-links a.active { color: var(--fg); background: var(--surface-2); }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .nsearch {
+    display: flex; align-items: center; gap: 8px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px;
+    width: 190px; transition: width .35s var(--ease), border-color .2s var(--ease);
+  }
+  .nsearch:focus-within { border-color: var(--line-2); width: 230px; }
+  .nsearch svg { flex: none; opacity: .6; }
+  .nsearch input {
+    background: none; border: 0; color: var(--fg); font-size: 14px; width: 100%; outline: none;
+  }
+  .nsearch input::placeholder { color: var(--mute); }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex: none; cursor: pointer;
+    display: grid; place-items: center; font-weight: 600; font-size: 14px;
+    color: var(--bg); background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    border: 1px solid rgba(255,255,255,.15); transition: transform .25s var(--spring);
+  }
+  .avatar:hover { transform: scale(1.08); }
+
+  @media (max-width: 680px) {
+    .nav-links { display: none; }
+    .nsearch { width: 150px; }
+    .nsearch:focus-within { width: 170px; }
+  }
+
+  /* ---- View transition ---------------------------------------------------- */
+  main { display: block; padding-bottom: 64px; }
+  .view { animation: viewIn .5s var(--ease) both; }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    margin: 40px 0 16px;
+  }
+  .eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+  h1, h2, h3 { letter-spacing: -0.02em; text-wrap: balance; margin: 0; font-weight: 600; }
+  .link-more { font-size: 13px; color: var(--dim); }
+  .link-more:hover { color: var(--accent); }
+
+  /* ---- Hero --------------------------------------------------------------- */
+  .hero { position: relative; margin-top: 28px; }
+  .hero h1 {
+    font-size: clamp(34px, 6vw, 62px); font-weight: 700; line-height: 1.02;
+    letter-spacing: -0.035em; max-width: 16ch;
+  }
+  .hero p { color: var(--dim); font-size: clamp(16px, 2.2vw, 20px); max-width: 48ch; margin-top: 18px; }
+  .hero .cta { margin-top: 26px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* ---- Buttons ------------------------------------------------------------ */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border-radius: 999px; padding: 11px 20px; font-size: 15px; font-weight: 500;
+    border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+    transition: transform .18s var(--spring), background .2s var(--ease),
+      border-color .2s var(--ease), color .2s var(--ease), opacity .2s var(--ease);
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary { background: var(--fg); color: #0a0a0c; }
+  .btn-primary:hover { background: #fff; }
+  .btn-ghost { background: var(--surface); color: var(--fg); border-color: var(--line); }
+  .btn-ghost:hover { background: var(--surface-2); border-color: var(--line-2); }
+  .btn-accent { background: var(--accent); color: #231a04; }
+  .btn-accent:hover { background: var(--accent-2); }
+  .btn.on { background: var(--surface-2); border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 8px 14px; font-size: 13px; }
+  .btn-block { width: 100%; }
+
+  /* ---- Poster grid -------------------------------------------------------- */
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .grid.tight { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+  .pcard { animation: pop .5s var(--ease) both; }
+  @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+
+  .poster {
+    position: relative; aspect-ratio: 2/3; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--line); display: block; cursor: pointer;
+    transition: transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
+    isolation: isolate;
+  }
+  .poster:hover { transform: translateY(-6px) scale(1.025); box-shadow: 0 24px 50px -20px rgba(0,0,0,.8);
+    border-color: var(--line-2); }
+  .poster .art { position: absolute; inset: 0; z-index: -1; }
+  .poster .art::after { /* subtle vignette + grain-ish sheen */
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(120% 80% at 30% 0%, rgba(255,255,255,.10), transparent 55%),
+      linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55));
+  }
+  .poster .meta { position: absolute; inset: 0; padding: 14px; display: flex; flex-direction: column;
+    justify-content: space-between; }
+  .poster .ptitle { font-weight: 700; font-size: clamp(15px, 1.4vw, 19px); line-height: 1.08;
+    letter-spacing: -0.02em; text-shadow: 0 1px 12px rgba(0,0,0,.5); }
+  .poster .pfoot { font-size: 11px; color: rgba(255,255,255,.85); letter-spacing: .02em;
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }
+  .poster .pyear { font-variant-numeric: tabular-nums; }
+  .poster .badge { position: absolute; top: 10px; right: 10px; font-size: 11px; font-weight: 600;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(6px); padding: 3px 7px; border-radius: 999px;
+    color: var(--accent-2); border: 1px solid var(--line); }
+  .poster .seen { position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(6px); display: grid; place-items: center;
+    border: 1px solid var(--line); color: var(--good); font-size: 12px; }
+
+  .pcard .u { margin-top: 8px; display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--mute); min-height: 16px; }
+
+  /* ---- Stars -------------------------------------------------------------- */
+  .stars { position: relative; display: inline-block; font-size: 20px; line-height: 1; white-space: nowrap;
+    user-select: none; }
+  .stars .track { color: #3a3a40; letter-spacing: 2px; }
+  .stars .fill { position: absolute; top: 0; left: 0; color: var(--accent); letter-spacing: 2px;
+    overflow: hidden; white-space: nowrap; pointer-events: none; transition: width .12s var(--ease); }
+  .stars.interactive { cursor: pointer; }
+  .stars .hit { position: absolute; inset: 0; display: flex; }
+  .stars .hit span { flex: 1 1 0; }
+  .stars.sm { font-size: 14px; }
+
+  /* ---- Film detail -------------------------------------------------------- */
+  .backdrop { position: relative; height: clamp(260px, 42vw, 440px); margin-top: -1px;
+    margin-inline: calc(-1 * max(20px, env(safe-area-inset-left,0px))) calc(-1 * max(20px, env(safe-area-inset-right,0px))); }
+  .backdrop .art { position: absolute; inset: 0; }
+  .backdrop .art::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(10,10,12,.2) 0%, rgba(10,10,12,.55) 55%, var(--bg) 100%),
+      radial-gradient(90% 60% at 20% 20%, rgba(0,0,0,.1), transparent); }
+  .detail { display: grid; grid-template-columns: 200px 1fr; gap: 28px; margin-top: -120px; position: relative; z-index: 1; }
+  .detail .poster { aspect-ratio: 2/3; box-shadow: 0 30px 60px -24px rgba(0,0,0,.9); }
+  .detail-main h1 { font-size: clamp(28px, 4.5vw, 46px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.04; }
+  .detail-main .sub { color: var(--dim); margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px 16px;
+    font-size: 14px; align-items: center; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 12px; color: var(--dim); }
+  .layout { display: grid; grid-template-columns: 1fr 320px; gap: 34px; margin-top: 40px; align-items: start; }
+  .prose { color: var(--dim); font-size: 16px; line-height: 1.7; max-width: 62ch; }
+  .cast { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 10px; margin-top: 14px; }
+  .cast .c { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .cast .c b { font-weight: 550; font-size: 14px; }
+  .cast .c span { display: block; color: var(--mute); font-size: 12px; margin-top: 2px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px;
+    position: sticky; top: calc(env(safe-area-inset-top,0px) + 72px); display: flex; flex-direction: column; gap: 14px; }
+  .panel .label { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
+  .panel .rate-row { display: flex; align-items: center; justify-content: space-between; }
+  .rate-note { font-size: 13px; color: var(--dim); }
+
+  .entry { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; }
+  .entry + .entry { margin-top: 10px; }
+  .entry .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .entry .date { font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .entry .rv { color: var(--dim); font-size: 14px; margin-top: 8px; white-space: pre-line; line-height: 1.55; }
+  .entry .acts { display: flex; gap: 14px; margin-top: 10px; font-size: 12px; color: var(--mute); }
+  .entry .acts button { background: none; border: 0; color: var(--mute); cursor: pointer; padding: 0; }
+  .entry .acts button:hover { color: var(--fg); }
+  .heart { color: var(--like); }
+
+  /* ---- Diary rows --------------------------------------------------------- */
+  .diary { border-top: 1px solid var(--line); }
+  .drow { display: grid; grid-template-columns: 54px 44px 1fr auto; gap: 14px; align-items: center;
+    padding: 16px 4px; border-bottom: 1px solid var(--line); transition: background .2s var(--ease); }
+  .drow:hover { background: rgba(255,255,255,.02); }
+  .drow .dday { text-align: center; }
+  .drow .dday b { display: block; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .drow .dday span { font-size: 11px; text-transform: uppercase; color: var(--mute); letter-spacing: .08em; }
+  .drow .dp { width: 44px; aspect-ratio: 2/3; border-radius: 7px; overflow: hidden; border: 1px solid var(--line); }
+
+  /* ---- Stats / profile ---------------------------------------------------- */
+  .statrow { display: flex; flex-wrap: wrap; gap: 26px 40px; margin-top: 22px; font-variant-numeric: tabular-nums; }
+  .stat b { display: block; font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+  .stat span { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--mute); margin-top: 7px; display: block; }
+  .pbanner { height: clamp(130px, 22vw, 200px); border-radius: 20px; overflow: hidden; position: relative;
+    margin-top: 24px; border: 1px solid var(--line); }
+  .bigavatar { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 34px; font-weight: 700; color: #0a0a0c; background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    border: 3px solid var(--bg); margin-top: -42px; position: relative; z-index: 1; }
+  .field { display: block; margin-top: 14px; }
+  .field .label { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); margin-bottom: 6px; }
+  .input, textarea.input {
+    width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    color: var(--fg); padding: 11px 13px; font-size: 15px; font-family: inherit; outline: none;
+    transition: border-color .2s var(--ease), background .2s var(--ease);
+  }
+  .input:focus { border-color: var(--accent); background: var(--surface-2); }
+  textarea.input { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+  .histo { display: flex; align-items: flex-end; gap: 6px; height: 72px; margin-top: 12px; }
+  .histo .bar { flex: 1; background: linear-gradient(180deg, var(--accent), rgba(232,179,62,.3));
+    border-radius: 5px 5px 2px 2px; min-height: 3px; transition: height .5s var(--ease); }
+  .histo-x { display: flex; justify-content: space-between; font-size: 11px; color: var(--mute); margin-top: 6px; }
+
+  /* ---- Empty states ------------------------------------------------------- */
+  .empty { border: 1px dashed var(--line-2); border-radius: 18px; padding: 48px 24px; text-align: center;
+    color: var(--mute); }
+  .empty .ic { font-size: 30px; opacity: .5; }
+  .empty p { margin: 10px 0 0; }
+  .empty .btn { margin-top: 16px; }
+
+  /* ---- Browse filters ----------------------------------------------------- */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 26px; }
+  .pill { border: 1px solid var(--line); background: var(--surface); color: var(--dim); font-size: 13px;
+    padding: 7px 14px; border-radius: 999px; cursor: pointer; transition: all .2s var(--ease); }
+  .pill:hover { color: var(--fg); border-color: var(--line-2); }
+  .pill.active { background: var(--fg); color: #0a0a0c; border-color: var(--fg); }
+
+  /* ---- Modal -------------------------------------------------------------- */
+  dialog.modal { border: 0; padding: 0; background: transparent; color: var(--fg); max-width: 460px; width: 92vw; }
+  dialog.modal::backdrop { background: rgba(0,0,0,.55); backdrop-filter: blur(8px); }
+  dialog.modal[open] .mcard { animation: modalIn .34s var(--spring) both; }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
+  .mcard { background: var(--surface); border: 1px solid var(--line-2); border-radius: 20px; padding: 22px;
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,.9); }
+  .mcard h3 { font-size: 20px; font-weight: 650; }
+  .checks { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; font-size: 14px; color: var(--dim); }
+  .checks label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+  .checks input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .merr { color: var(--like); font-size: 13px; min-height: 0; }
+  .mrow { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+  /* ---- Toast -------------------------------------------------------------- */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom,0px)); transform: translateX(-50%);
+    background: rgba(32,32,36,.92); backdrop-filter: blur(16px); border: 1px solid var(--line-2);
+    color: var(--fg); padding: 12px 16px; border-radius: 14px; font-size: 14px; z-index: 100;
+    display: flex; align-items: center; gap: 14px; box-shadow: 0 20px 50px -20px rgba(0,0,0,.8);
+    animation: toastIn .4s var(--spring) both;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translateX(-50%); } }
+  .toast button { background: none; border: 0; color: var(--accent); font-weight: 600; cursor: pointer; font-size: 14px; }
+
+  /* ---- Footer ------------------------------------------------------------- */
+  .foot { border-top: 1px solid var(--line); margin-top: 40px; }
+  .foot-in { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center;
+    padding-block: 26px; color: var(--mute); font-size: 13px;
+    width: 100%; max-width: var(--shell); margin-inline: auto;
+    padding-inline: max(20px, env(safe-area-inset-left,0px)) max(20px, env(safe-area-inset-right,0px)); }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .panel { position: static; }
+  }
+  @media (max-width: 560px) {
+    .detail { grid-template-columns: 120px 1fr; gap: 18px; margin-top: -80px; }
+    .drow { grid-template-columns: 48px 40px 1fr auto; gap: 10px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+    .poster:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-fx" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="#home" aria-label="ReelLog home"><span class="dot"></span>ReelLog</a>
+    <nav class="nav-links" id="navlinks" aria-label="Primary">
+      <a href="#home" data-nav="home">Home</a>
+      <a href="#browse" data-nav="browse">Browse</a>
+      <a href="#diary" data-nav="diary">Diary</a>
+      <a href="#watchlist" data-nav="watchlist">Watchlist</a>
+    </nav>
+    <div class="nav-right">
+      <form class="nsearch" id="navsearch" role="search" onsubmit="return false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+        <input id="navq" type="search" placeholder="Search films" autocomplete="off" aria-label="Search films" />
+      </form>
+      <button class="avatar" id="navavatar" title="Your profile" aria-label="Your profile"></button>
+    </div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <span class="brand" style="font-size:15px"><span class="dot"></span>ReelLog</span>
+    <span>A film diary, saved on this device · no account needed</span>
+  </div>
+</footer>
+
+<div id="toast-root" aria-live="polite"></div>
+
+<dialog class="modal" id="logModal" aria-label="Log a film">
+  <form class="mcard" id="logForm" method="dialog">
+    <h3 id="mTitle">Log this film</h3>
+    <input type="hidden" id="mLogId" />
+    <input type="hidden" id="mFilmId" />
+    <div class="field">
+      <div class="label">Watched on</div>
+      <input class="input" type="date" id="mDate" />
+    </div>
+    <div class="field">
+      <div class="label">Your rating</div>
+      <div style="display:flex;align-items:center;gap:14px;margin-top:4px">
+        <div class="stars interactive" id="mStars" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" aria-label="Your rating in half stars">
+          <div class="track">★★★★★</div>
+          <div class="fill" style="width:0%">★★★★★</div>
+          <div class="hit"></div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="mClear">Clear</button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="label">Review <span style="text-transform:none;letter-spacing:0;color:var(--mute)">(optional)</span></div>
+      <textarea class="input" id="mReview" maxlength="4000" placeholder="What did you think?"></textarea>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="mLiked" /> Liked</label>
+      <label><input type="checkbox" id="mRewatch" /> Rewatch</label>
+      <label><input type="checkbox" id="mSpoilers" /> Spoilers</label>
+    </div>
+    <p class="merr" id="mErr"></p>
+    <div class="mrow">
+      <button type="button" class="btn btn-ghost" id="mCancel">Cancel</button>
+      <button type="submit" class="btn btn-accent" id="mSave">Save entry</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ===========================================================================
+   ReelLog app — vanilla JS, classic script so it runs straight from file://.
+   State lives in localStorage; the film catalog is bundled below. Poster and
+   backdrop artwork is generated from each film's id, so nothing loads from the
+   network and nothing can break.
+   ========================================================================= */
+(function () {
+  "use strict";
+
+  /* ---- Catalog (facts are real; synopses are short originals) ------------ */
+  var FILMS = [
+    {id:1,title:"The Matrix",year:1999,director:"The Wachowskis",runtime:136,genres:["Sci-Fi","Action"],rating:8.7,overview:"A hacker discovers reality is a simulation and is pulled into a war to free humankind.",cast:["Keanu Reeves","Laurence Fishburne","Carrie-Anne Moss"]},
+    {id:2,title:"Pulp Fiction",year:1994,director:"Quentin Tarantino",runtime:154,genres:["Crime","Drama"],rating:8.9,overview:"Interwoven Los Angeles crime stories told with wit, menace and looping time.",cast:["John Travolta","Samuel L. Jackson","Uma Thurman"]},
+    {id:3,title:"The Godfather",year:1972,director:"Francis Ford Coppola",runtime:175,genres:["Crime","Drama"],rating:9.2,overview:"The aging patriarch of a crime dynasty hands control to his reluctant son.",cast:["Marlon Brando","Al Pacino","James Caan"]},
+    {id:4,title:"Parasite",year:2019,director:"Bong Joon-ho",runtime:132,genres:["Thriller","Drama"],rating:8.5,overview:"A poor family schemes its way into a wealthy household, with unraveling consequences.",cast:["Song Kang-ho","Lee Sun-kyun","Cho Yeo-jeong"]},
+    {id:5,title:"Interstellar",year:2014,director:"Christopher Nolan",runtime:169,genres:["Sci-Fi","Drama"],rating:8.7,overview:"Explorers ride through a wormhole to find humanity a new home among the stars.",cast:["Matthew McConaughey","Anne Hathaway","Jessica Chastain"]},
+    {id:6,title:"Inception",year:2010,director:"Christopher Nolan",runtime:148,genres:["Sci-Fi","Action"],rating:8.8,overview:"A thief who steals secrets through dreams takes on the task of planting one.",cast:["Leonardo DiCaprio","Joseph Gordon-Levitt","Elliot Page"]},
+    {id:7,title:"The Dark Knight",year:2008,director:"Christopher Nolan",runtime:152,genres:["Action","Crime"],rating:9.0,overview:"Batman faces the Joker, an agent of chaos bent on breaking the city's spirit.",cast:["Christian Bale","Heath Ledger","Aaron Eckhart"]},
+    {id:8,title:"Blade Runner 2049",year:2017,director:"Denis Villeneuve",runtime:164,genres:["Sci-Fi","Drama"],rating:8.0,overview:"A replicant detective uncovers a secret that could upend what remains of order.",cast:["Ryan Gosling","Harrison Ford","Ana de Armas"]},
+    {id:9,title:"Dune",year:2021,director:"Denis Villeneuve",runtime:155,genres:["Sci-Fi","Adventure"],rating:8.0,overview:"A gifted heir is drawn into a battle for a desert planet and its precious spice.",cast:["Timothée Chalamet","Rebecca Ferguson","Oscar Isaac"]},
+    {id:10,title:"Whiplash",year:2014,director:"Damien Chazelle",runtime:106,genres:["Drama","Music"],rating:8.5,overview:"A young drummer is pushed to the brink by a ruthless conservatory instructor.",cast:["Miles Teller","J.K. Simmons","Melissa Benoist"]},
+    {id:11,title:"La La Land",year:2016,director:"Damien Chazelle",runtime:128,genres:["Musical","Romance"],rating:8.0,overview:"A jazz pianist and an aspiring actress fall in love while chasing their dreams in LA.",cast:["Ryan Gosling","Emma Stone","John Legend"]},
+    {id:12,title:"Spirited Away",year:2001,director:"Hayao Miyazaki",runtime:125,genres:["Animation","Fantasy"],rating:8.6,overview:"A girl wanders into a spirit world and must work to free her parents and herself.",cast:["Rumi Hiiragi","Miyu Irino","Mari Natsuki"]},
+    {id:13,title:"Your Name",year:2016,director:"Makoto Shinkai",runtime:106,genres:["Animation","Romance"],rating:8.4,overview:"Two teenagers discover they are mysteriously swapping bodies across distance and time.",cast:["Ryunosuke Kamiki","Mone Kamishiraishi","Masami Nagasawa"]},
+    {id:14,title:"Goodfellas",year:1990,director:"Martin Scorsese",runtime:145,genres:["Crime","Drama"],rating:8.7,overview:"A mobster's rise and fall across decades of loyalty, excess and betrayal.",cast:["Robert De Niro","Ray Liotta","Joe Pesci"]},
+    {id:15,title:"The Wolf of Wall Street",year:2013,director:"Martin Scorsese",runtime:180,genres:["Biography","Comedy"],rating:8.2,overview:"A stockbroker's rocketing fortune and spectacular crash, told at full throttle.",cast:["Leonardo DiCaprio","Jonah Hill","Margot Robbie"]},
+    {id:16,title:"Fight Club",year:1999,director:"David Fincher",runtime:139,genres:["Drama"],rating:8.8,overview:"An insomniac and a soap maker start an underground club that spirals out of control.",cast:["Brad Pitt","Edward Norton","Helena Bonham Carter"]},
+    {id:17,title:"Se7en",year:1995,director:"David Fincher",runtime:127,genres:["Crime","Thriller"],rating:8.6,overview:"Two detectives hunt a killer staging murders around the seven deadly sins.",cast:["Brad Pitt","Morgan Freeman","Gwyneth Paltrow"]},
+    {id:18,title:"The Social Network",year:2010,director:"David Fincher",runtime:120,genres:["Drama","Biography"],rating:7.8,overview:"The founding of a world-changing website, and the friendships it cost.",cast:["Jesse Eisenberg","Andrew Garfield","Armie Hammer"]},
+    {id:19,title:"No Country for Old Men",year:2007,director:"Joel & Ethan Coen",runtime:122,genres:["Crime","Thriller"],rating:8.2,overview:"A hunter takes a case of drug money and draws a relentless killer onto his trail.",cast:["Javier Bardem","Josh Brolin","Tommy Lee Jones"]},
+    {id:20,title:"There Will Be Blood",year:2007,director:"Paul Thomas Anderson",runtime:158,genres:["Drama"],rating:8.2,overview:"A ruthless oil prospector builds an empire and burns every bond along the way.",cast:["Daniel Day-Lewis","Paul Dano","Ciarán Hinds"]},
+    {id:21,title:"Oppenheimer",year:2023,director:"Christopher Nolan",runtime:180,genres:["Biography","Drama"],rating:8.3,overview:"The physicist who built the atomic bomb faces the fallout of what he unleashed.",cast:["Cillian Murphy","Emily Blunt","Robert Downey Jr."]},
+    {id:22,title:"Everything Everywhere All at Once",year:2022,director:"Daniel Kwan & Daniel Scheinert",runtime:139,genres:["Sci-Fi","Comedy"],rating:7.8,overview:"A laundromat owner leaps across parallel lives to save the multiverse and her family.",cast:["Michelle Yeoh","Ke Huy Quan","Stephanie Hsu"]},
+    {id:23,title:"Spider-Man: Into the Spider-Verse",year:2018,director:"Persichetti, Ramsey & Rothman",runtime:117,genres:["Animation","Action"],rating:8.4,overview:"A Brooklyn teen becomes Spider-Man and meets heroes from across the multiverse.",cast:["Shameik Moore","Jake Johnson","Hailee Steinfeld"]},
+    {id:24,title:"Mad Max: Fury Road",year:2015,director:"George Miller",runtime:120,genres:["Action","Adventure"],rating:8.1,overview:"On a desert highway, a drifter and a rebel commander flee a tyrant in a roaring convoy.",cast:["Tom Hardy","Charlize Theron","Nicholas Hoult"]},
+    {id:25,title:"Arrival",year:2016,director:"Denis Villeneuve",runtime:116,genres:["Sci-Fi","Drama"],rating:7.9,overview:"A linguist races to understand alien visitors before fear turns to war.",cast:["Amy Adams","Jeremy Renner","Forest Whitaker"]},
+    {id:26,title:"Joker",year:2019,director:"Todd Phillips",runtime:122,genres:["Drama","Crime"],rating:8.3,overview:"A failing comedian in a cruel city descends into violence and myth.",cast:["Joaquin Phoenix","Robert De Niro","Zazie Beetz"]},
+    {id:27,title:"The Grand Budapest Hotel",year:2014,director:"Wes Anderson",runtime:99,genres:["Comedy","Adventure"],rating:8.1,overview:"A legendary concierge and his loyal bellhop tangle with a priceless painting and a murder.",cast:["Ralph Fiennes","Tony Revolori","Saoirse Ronan"]},
+    {id:28,title:"Moonlight",year:2016,director:"Barry Jenkins",runtime:111,genres:["Drama"],rating:7.4,overview:"Three chapters in the life of a young man finding himself in Miami.",cast:["Trevante Rhodes","Mahershala Ali","Naomie Harris"]},
+    {id:29,title:"Get Out",year:2017,director:"Jordan Peele",runtime:104,genres:["Horror","Thriller"],rating:7.8,overview:"A visit to his girlfriend's family turns into a nightmare a young man must escape.",cast:["Daniel Kaluuya","Allison Williams","Catherine Keener"]},
+    {id:30,title:"Her",year:2013,director:"Spike Jonze",runtime:126,genres:["Romance","Sci-Fi"],rating:8.0,overview:"A lonely writer falls in love with an operating system that learns to feel.",cast:["Joaquin Phoenix","Scarlett Johansson","Amy Adams"]},
+    {id:31,title:"Drive",year:2011,director:"Nicolas Winding Refn",runtime:100,genres:["Crime","Drama"],rating:7.8,overview:"A stunt driver moonlighting as a getaway wheel is pulled into a deadly heist.",cast:["Ryan Gosling","Carey Mulligan","Albert Brooks"]},
+    {id:32,title:"The Shawshank Redemption",year:1994,director:"Frank Darabont",runtime:142,genres:["Drama"],rating:9.3,overview:"A banker sentenced for a crime he denies holds onto hope across decades in prison.",cast:["Tim Robbins","Morgan Freeman","Bob Gunton"]},
+    {id:33,title:"Forrest Gump",year:1994,director:"Robert Zemeckis",runtime:142,genres:["Drama","Romance"],rating:8.8,overview:"An earnest man drifts through decades of history and one enduring love.",cast:["Tom Hanks","Robin Wright","Gary Sinise"]},
+    {id:34,title:"Titanic",year:1997,director:"James Cameron",runtime:195,genres:["Romance","Drama"],rating:7.9,overview:"A romance blooms aboard a doomed liner on its first and final voyage.",cast:["Leonardo DiCaprio","Kate Winslet","Billy Zane"]},
+    {id:35,title:"Avatar",year:2009,director:"James Cameron",runtime:162,genres:["Sci-Fi","Adventure"],rating:7.9,overview:"A marine inhabits an alien body and must choose a side on a lush, threatened moon.",cast:["Sam Worthington","Zoe Saldaña","Sigourney Weaver"]},
+    {id:36,title:"Gladiator",year:2000,director:"Ridley Scott",runtime:155,genres:["Action","Drama"],rating:8.5,overview:"A betrayed general rises from slavery to the arena to avenge his family.",cast:["Russell Crowe","Joaquin Phoenix","Connie Nielsen"]},
+    {id:37,title:"The Lord of the Rings: The Fellowship of the Ring",year:2001,director:"Peter Jackson",runtime:178,genres:["Fantasy","Adventure"],rating:8.9,overview:"A hobbit sets out to destroy a ring of terrible power with an unlikely fellowship.",cast:["Elijah Wood","Ian McKellen","Viggo Mortensen"]},
+    {id:38,title:"The Lord of the Rings: The Return of the King",year:2003,director:"Peter Jackson",runtime:201,genres:["Fantasy","Adventure"],rating:9.0,overview:"The fellowship's paths converge for a final stand against the shadow.",cast:["Elijah Wood","Ian McKellen","Viggo Mortensen"]},
+    {id:39,title:"Eternal Sunshine of the Spotless Mind",year:2004,director:"Michel Gondry",runtime:108,genres:["Romance","Sci-Fi"],rating:8.3,overview:"A couple erase each other from memory, then fight to hold on to what's left.",cast:["Jim Carrey","Kate Winslet","Kirsten Dunst"]},
+    {id:40,title:"Portrait of a Lady on Fire",year:2019,director:"Céline Sciamma",runtime:122,genres:["Drama","Romance"],rating:8.1,overview:"A painter and her subject fall in love in the quiet days before a marriage.",cast:["Noémie Merlant","Adèle Haenel","Luàna Bajrami"]},
+    {id:41,title:"Call Me by Your Name",year:2017,director:"Luca Guadagnino",runtime:132,genres:["Romance","Drama"],rating:7.8,overview:"A first love unfolds over one luminous Italian summer.",cast:["Timothée Chalamet","Armie Hammer","Michael Stuhlbarg"]},
+    {id:42,title:"2001: A Space Odyssey",year:1968,director:"Stanley Kubrick",runtime:149,genres:["Sci-Fi"],rating:8.3,overview:"From the dawn of man to the edge of the infinite, guided by a silent monolith.",cast:["Keir Dullea","Gary Lockwood","William Sylvester"]},
+    {id:43,title:"The Shining",year:1980,director:"Stanley Kubrick",runtime:146,genres:["Horror"],rating:8.4,overview:"A winter caretaker and his family are slowly unmade by a haunted hotel.",cast:["Jack Nicholson","Shelley Duvall","Danny Lloyd"]},
+    {id:44,title:"Taxi Driver",year:1976,director:"Martin Scorsese",runtime:114,genres:["Drama","Crime"],rating:8.2,overview:"A lonely night-shift cabbie fixates on cleansing a city he can't stand.",cast:["Robert De Niro","Jodie Foster","Cybill Shepherd"]},
+    {id:45,title:"Alien",year:1979,director:"Ridley Scott",runtime:117,genres:["Sci-Fi","Horror"],rating:8.5,overview:"A commercial crew answers a distress call and brings something aboard.",cast:["Sigourney Weaver","Tom Skerritt","John Hurt"]},
+    {id:46,title:"Jaws",year:1975,director:"Steven Spielberg",runtime:124,genres:["Thriller","Adventure"],rating:8.1,overview:"A police chief, a scientist and a salty captain hunt a great white terrorizing a resort.",cast:["Roy Scheider","Richard Dreyfuss","Robert Shaw"]},
+    {id:47,title:"Past Lives",year:2023,director:"Celine Song",runtime:105,genres:["Romance","Drama"],rating:7.8,overview:"Two childhood friends reunite decades later to weigh the lives they didn't choose.",cast:["Greta Lee","Teo Yoo","John Magaro"]},
+    {id:48,title:"The Batman",year:2022,director:"Matt Reeves",runtime:176,genres:["Action","Crime"],rating:7.8,overview:"In his second year of nights, the detective hunts a killer unmasking the city's rot.",cast:["Robert Pattinson","Zoë Kravitz","Paul Dano"]}
+  ];
+  var BY_ID = {};
+  FILMS.forEach(function (f) { BY_ID[f.id] = f; });
+
+  var GENRES = (function () {
+    var set = {};
+    FILMS.forEach(function (f) { f.genres.forEach(function (g) { set[g] = 1; }); });
+    return Object.keys(set).sort();
+  })();
+
+  /* ---- State / storage --------------------------------------------------- */
+  var KEY = "reellog.v1";
+  var state = { profile: { name: "You", bio: "" }, logs: [], watchlist: [], favorites: [] };
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        state.profile = s.profile || state.profile;
+        state.logs = Array.isArray(s.logs) ? s.logs : [];
+        state.watchlist = Array.isArray(s.watchlist) ? s.watchlist : [];
+        state.favorites = Array.isArray(s.favorites) ? s.favorites : [];
+      }
+    } catch (e) { /* private mode / blocked storage — run with defaults */ }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  /* ---- Helpers ----------------------------------------------------------- */
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function runtime(m) { return Math.floor(m / 60) + "h " + (m % 60) + "m"; }
+  function todayISO() {
+    var d = new Date(), z = function (n) { return (n < 10 ? "0" : "") + n; };
+    return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
+  }
+  function fmtDate(iso) {
+    if (!iso) return "No date";
+    var p = iso.split("-");
+    var d = new Date(+p[0], +p[1] - 1, +p[2]);
+    return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  }
+  function logsFor(id) {
+    return state.logs.filter(function (l) { return l.filmId === id; })
+      .sort(function (a, b) { return b.createdAt - a.createdAt; });
+  }
+  function hasWatched(id) { return state.logs.some(function (l) { return l.filmId === id; }); }
+  function inWatchlist(id) { return state.watchlist.indexOf(id) !== -1; }
+  function isFav(id) { return state.favorites.indexOf(id) !== -1; }
+  function currentRating(id) {
+    var ls = logsFor(id);
+    for (var i = 0; i < ls.length; i++) { if (ls[i].rating) return ls[i].rating; }
+    return 0;
+  }
+
+  /* ---- Generated artwork -------------------------------------------------- */
+  // Deterministic duotone gradient from the film id. Muted + cinematic.
+  function hues(id) {
+    var h1 = (id * 47 + 200) % 360;
+    var h2 = (h1 + 38) % 360;
+    return [h1, h2];
+  }
+  function artStyle(id, wide) {
+    var h = hues(id), a = wide ? "120deg" : "160deg";
+    var c1 = "hsl(" + h[0] + " 42% 26%)";
+    var c2 = "hsl(" + h[1] + " 48% 12%)";
+    var c3 = "hsl(" + h[0] + " 55% 42%)";
+    return "background:" +
+      "radial-gradient(120% 90% at 75% 8%, " + c3 + "55, transparent 55%)," +
+      "linear-gradient(" + a + ", " + c1 + ", " + c2 + ");";
+  }
+  function posterInner(f, opts) {
+    opts = opts || {};
+    var seen = opts.seen && hasWatched(f.id);
+    var rating = opts.rating;
+    return (
+      '<div class="art" style="' + artStyle(f.id, false) + '"></div>' +
+      '<div class="meta">' +
+        '<div class="ptitle">' + esc(f.title) + '</div>' +
+        '<div class="pfoot"><span class="pdir">' + esc(f.director.split("&")[0].split(",")[0].trim()) + '</span>' +
+          '<span class="pyear">' + f.year + '</span></div>' +
+      '</div>' +
+      '<span class="badge">★ ' + f.rating.toFixed(1) + '</span>' +
+      (seen ? '<span class="seen">✓</span>' : '')
+    );
+  }
+  function posterCard(f, opts) {
+    opts = opts || {};
+    var under = "";
+    if (opts.under === "mine") {
+      var r = currentRating(f.id), liked = logsFor(f.id).some(function (l) { return l.liked; });
+      under = '<div class="u">' + (r ? starsStatic(r, true) : '<span></span>') +
+        (liked ? '<span class="heart">♥</span>' : '<span></span>') + '</div>';
+    }
+    return '<div class="pcard" style="animation-delay:' + ((opts.i || 0) % 12) * 0.03 + 's">' +
+      '<a class="poster" href="#film-' + f.id + '" aria-label="' + esc(f.title) + ' (' + f.year + ')">' +
+      posterInner(f, opts) + '</a>' + under + '</div>';
+  }
+
+  /* ---- Star rendering ----------------------------------------------------- */
+  function starsStatic(rating, small) {
+    return '<span class="stars' + (small ? ' sm' : '') + '" aria-label="' + (rating / 2) + ' of 5 stars">' +
+      '<span class="track">★★★★★</span>' +
+      '<span class="fill" style="width:' + (rating * 10) + '%">★★★★★</span></span>';
+  }
+
+  /* ---- Toast (with optional action, e.g. Undo) --------------------------- */
+  var toastTimer = null;
+  function toast(msg, actionLabel, onAction) {
+    var root = document.getElementById("toast-root");
+    root.innerHTML = "";
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.innerHTML = '<span>' + esc(msg) + '</span>';
+    if (actionLabel) {
+      var b = document.createElement("button");
+      b.textContent = actionLabel;
+      b.onclick = function () { clearTimeout(toastTimer); root.innerHTML = ""; onAction && onAction(); };
+      el.appendChild(b);
+    }
+    root.appendChild(el);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { root.innerHTML = ""; }, actionLabel ? 6000 : 3000);
+  }
+
+  /* ---- Actions ----------------------------------------------------------- */
+  function toggleWatchlist(id) {
+    var i = state.watchlist.indexOf(id);
+    if (i === -1) { state.watchlist.unshift(id); toast("Added to watchlist"); }
+    else { state.watchlist.splice(i, 1); toast("Removed from watchlist"); }
+    save(); rerender();
+  }
+  function toggleFav(id) {
+    var i = state.favorites.indexOf(id);
+    if (i !== -1) { state.favorites.splice(i, 1); toast("Removed from favourites"); }
+    else {
+      if (state.favorites.length >= 4) { toast("You can pick up to 4 favourites"); return; }
+      state.favorites.push(id); toast("Added to favourites");
+    }
+    save(); rerender();
+  }
+  function quickRate(id, rating) {
+    // Quick-rate creates a dated diary entry (also marks the film watched).
+    state.logs.push({ id: uid(), filmId: id, date: todayISO(), rating: rating,
+      review: "", liked: false, rewatch: false, spoilers: false, createdAt: Date.now() });
+    save(); toast((rating / 2) + " stars logged"); rerender();
+  }
+  function deleteLog(logId) {
+    var idx = -1;
+    for (var i = 0; i < state.logs.length; i++) { if (state.logs[i].id === logId) { idx = i; break; } }
+    if (idx === -1) return;
+    var removed = state.logs.splice(idx, 1)[0];
+    save(); rerender();
+    toast("Entry deleted", "Undo", function () {
+      state.logs.push(removed); save(); rerender();
+    });
+  }
+
+  /* ---- Log modal --------------------------------------------------------- */
+  var modal = document.getElementById("logModal");
+  var mStars = document.getElementById("mStars");
+  var mStarsValue = 0;
+
+  function paintStars(el, value) {
+    el.querySelector(".fill").style.width = (value * 10) + "%";
+    el.setAttribute("aria-valuenow", value / 2);
+  }
+  function buildHit(el, onSet) {
+    var hit = el.querySelector(".hit");
+    hit.innerHTML = "";
+    for (var i = 1; i <= 10; i++) {
+      var s = document.createElement("span");
+      s.dataset.v = i;
+      s.addEventListener("mousemove", function (ev) { paintStars(el, +ev.currentTarget.dataset.v); });
+      s.addEventListener("click", function (ev) { var v = +ev.currentTarget.dataset.v; onSet(v); });
+      hit.appendChild(s);
+    }
+    el.addEventListener("mouseleave", function () { paintStars(el, onSet.get()); });
+    el.addEventListener("keydown", function (ev) {
+      if (ev.key === "ArrowRight" || ev.key === "ArrowUp") { ev.preventDefault(); onSet(Math.min(10, onSet.get() + 1)); }
+      else if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") { ev.preventDefault(); onSet(Math.max(0, onSet.get() - 1)); }
+    });
+  }
+  (function initModalStars() {
+    var setter = function (v) { mStarsValue = v; paintStars(mStars, v); };
+    setter.get = function () { return mStarsValue; };
+    buildHit(mStars, setter);
+    document.getElementById("mClear").onclick = function () { mStarsValue = 0; paintStars(mStars, 0); };
+  })();
+
+  function openLog(filmId, existing) {
+    document.getElementById("mErr").textContent = "";
+    document.getElementById("mFilmId").value = filmId;
+    var f = BY_ID[filmId];
+    if (existing) {
+      document.getElementById("mTitle").textContent = "Edit entry · " + f.title;
+      document.getElementById("mLogId").value = existing.id;
+      document.getElementById("mDate").value = existing.date || "";
+      document.getElementById("mReview").value = existing.review || "";
+      document.getElementById("mLiked").checked = !!existing.liked;
+      document.getElementById("mRewatch").checked = !!existing.rewatch;
+      document.getElementById("mSpoilers").checked = !!existing.spoilers;
+      mStarsValue = existing.rating || 0;
+    } else {
+      document.getElementById("mTitle").textContent = "Log · " + f.title;
+      document.getElementById("mLogId").value = "";
+      document.getElementById("mDate").value = todayISO();
+      document.getElementById("mReview").value = "";
+      document.getElementById("mLiked").checked = false;
+      document.getElementById("mRewatch").checked = false;
+      document.getElementById("mSpoilers").checked = false;
+      mStarsValue = 0;
+    }
+    paintStars(mStars, mStarsValue);
+    document.getElementById("mDate").max = todayISO();
+    if (typeof modal.showModal === "function") modal.showModal(); else modal.setAttribute("open", "");
+  }
+  document.getElementById("mCancel").onclick = function () { modal.close(); };
+  document.getElementById("logForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var filmId = +document.getElementById("mFilmId").value;
+    var date = document.getElementById("mDate").value;
+    if (date && date > todayISO()) { document.getElementById("mErr").textContent = "You can't log a film in the future."; return; }
+    var logId = document.getElementById("mLogId").value;
+    var data = {
+      filmId: filmId, date: date || null, rating: mStarsValue || null,
+      review: document.getElementById("mReview").value.trim(),
+      liked: document.getElementById("mLiked").checked,
+      rewatch: document.getElementById("mRewatch").checked,
+      spoilers: document.getElementById("mSpoilers").checked
+    };
+    if (logId) {
+      state.logs.forEach(function (l) { if (l.id === logId) { for (var k in data) l[k] = data[k]; } });
+      toast("Entry updated");
+    } else {
+      data.id = uid(); data.createdAt = Date.now(); state.logs.push(data);
+      toast("Entry saved");
+    }
+    save(); modal.close(); rerender();
+  });
+
+  /* ---- Views ------------------------------------------------------------- */
+  var app = document.getElementById("app");
+
+  function viewHome() {
+    var featured = FILMS.slice(0, 12);
+    var recent = state.logs.slice().sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(0, 6);
+    var html = '<div class="view">';
+    // Hero with the backdrop of a notable film behind it
+    var heroFilm = BY_ID[9];
+    html += '<section class="hero wrap">' +
+      '<h1>Keep a diary of every film you watch.</h1>' +
+      '<p>Track what you’ve seen, rate it in half-stars, write reviews and build a watchlist. Calm, fast, and private to this device.</p>' +
+      '<div class="cta"><a class="btn btn-primary" href="#browse">Browse films</a>' +
+      '<a class="btn btn-ghost" href="#diary">Your diary</a></div>' +
+      '</section>';
+
+    if (recent.length) {
+      html += '<section class="wrap"><div class="section-head"><h2>Recently logged</h2>' +
+        '<a class="link-more" href="#diary">Full diary →</a></div><div class="grid">';
+      recent.forEach(function (l, i) { html += posterCard(BY_ID[l.filmId], { i: i, seen: true, under: "mine" }); });
+      html += '</div></section>';
+    }
+
+    html += '<section class="wrap"><div class="section-head"><div><div class="eyebrow">Featured</div>' +
+      '<h2>Essential viewing</h2></div><a class="link-more" href="#browse">See all ' + FILMS.length + ' →</a></div>' +
+      '<div class="grid">';
+    featured.forEach(function (f, i) { html += posterCard(f, { i: i, seen: true }); });
+    html += '</div></section></div>';
+    app.innerHTML = html;
+  }
+
+  function viewBrowse(query) {
+    var html = '<div class="view wrap"><div class="section-head" style="margin-top:28px"><div>' +
+      '<div class="eyebrow">Catalog</div><h2>Browse films</h2></div></div>';
+    html += '<div class="filters" id="genrePills"><button class="pill active" data-g="">All</button>';
+    GENRES.forEach(function (g) { html += '<button class="pill" data-g="' + esc(g) + '">' + esc(g) + '</button>'; });
+    html += '</div><div class="grid" id="browseGrid"></div>' +
+      '<div id="browseEmpty"></div></div>';
+    app.innerHTML = html;
+
+    var activeGenre = "";
+    function apply() {
+      var q = (document.getElementById("navq").value || "").trim().toLowerCase();
+      var list = FILMS.filter(function (f) {
+        var okG = !activeGenre || f.genres.indexOf(activeGenre) !== -1;
+        var okQ = !q || f.title.toLowerCase().indexOf(q) !== -1 ||
+          f.director.toLowerCase().indexOf(q) !== -1 ||
+          f.genres.join(" ").toLowerCase().indexOf(q) !== -1;
+        return okG && okQ;
+      });
+      var grid = document.getElementById("browseGrid");
+      var empty = document.getElementById("browseEmpty");
+      if (!list.length) {
+        grid.innerHTML = "";
+        empty.innerHTML = '<div class="empty"><div class="ic">🎞️</div><p>No films match “' + esc(q) + '”.</p></div>';
+      } else {
+        empty.innerHTML = "";
+        grid.innerHTML = list.map(function (f, i) { return posterCard(f, { i: i, seen: true }); }).join("");
+      }
+    }
+    document.getElementById("genrePills").addEventListener("click", function (ev) {
+      var b = ev.target.closest(".pill"); if (!b) return;
+      activeGenre = b.dataset.g;
+      [].forEach.call(this.querySelectorAll(".pill"), function (p) { p.classList.toggle("active", p === b); });
+      apply();
+    });
+    browseApply = apply; // let nav search refresh the grid live
+    if (query) document.getElementById("navq").value = query;
+    apply();
+  }
+
+  function viewFilm(id) {
+    var f = BY_ID[id];
+    if (!f) { location.hash = "#home"; return; }
+    var r = currentRating(id), watched = hasWatched(id), wl = inWatchlist(id), fav = isFav(id);
+    var mine = logsFor(id);
+    var reviews = mine.filter(function (l) { return l.review; });
+
+    var html = '<div class="view">';
+    html += '<div class="wrap"><div class="backdrop"><div class="art" style="' + artStyle(id, true) + '"></div></div>';
+    html += '<div class="detail"><a class="poster" style="pointer-events:none">' + posterInner(f, {}) + '</a>' +
+      '<div class="detail-main"><h1>' + esc(f.title) + '</h1>' +
+      '<div class="sub"><span class="pyear" style="color:var(--fg)">' + f.year + '</span>' +
+      '<span>' + runtime(f.runtime) + '</span>' +
+      '<span>Dir. <b style="font-weight:550;color:var(--fg)">' + esc(f.director) + '</b></span>' +
+      '<span style="color:var(--accent)">★ ' + f.rating.toFixed(1) + '</span></div>' +
+      '<div class="sub" style="margin-top:12px">' + f.genres.map(function (g) {
+        return '<a class="chip" href="#browse">' + esc(g) + '</a>';
+      }).join("") + '</div></div></div>';
+
+    html += '<div class="layout"><div>' +
+      '<p class="prose">' + esc(f.overview) + '</p>' +
+      '<div class="section-head" style="margin:28px 0 0"><h3>Cast</h3></div>' +
+      '<div class="cast">' + f.cast.map(function (c) {
+        return '<div class="c"><b>' + esc(c) + '</b></div>';
+      }).join("") + '</div>';
+
+    // Reviews
+    html += '<div class="section-head" style="margin:34px 0 0"><h3>Your reviews</h3></div>';
+    if (reviews.length) {
+      html += '<div style="margin-top:14px">';
+      reviews.forEach(function (l) {
+        html += '<div class="entry"><div class="top"><span class="date">' + fmtDate(l.date) +
+          (l.rewatch ? ' · rewatch' : '') + '</span><span style="display:flex;gap:8px;align-items:center">' +
+          (l.rating ? starsStatic(l.rating, true) : '') + (l.liked ? '<span class="heart">♥</span>' : '') + '</span></div>' +
+          '<div class="rv">' + (l.spoilers ? '<em style="color:var(--mute)">Spoilers — </em>' : '') + esc(l.review) + '</div></div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="empty" style="margin-top:14px"><p>No reviews yet. Log this film to write one.</p></div>';
+    }
+    html += '</div>';
+
+    // Action panel
+    html += '<aside><div class="panel">' +
+      '<button class="btn ' + (wl ? 'on' : 'btn-ghost') + ' btn-block" data-act="wl" data-id="' + id + '">' +
+      (wl ? 'On your watchlist ✓' : 'Add to watchlist') + '</button>' +
+      '<div><div class="label">Your rating</div><div class="rate-row" style="margin-top:8px">' +
+      '<span class="stars interactive" id="panelStars" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="5" aria-valuenow="' + (r / 2) + '" aria-label="Rate ' + esc(f.title) + '">' +
+      '<span class="track">★★★★★</span><span class="fill" style="width:' + (r * 10) + '%">★★★★★</span><span class="hit"></span></span>' +
+      '<span class="rate-note">' + (r ? (r / 2) + ' / 5' : 'Tap to rate') + '</span></div></div>' +
+      '<button class="btn btn-accent btn-block" data-act="log" data-id="' + id + '">' +
+      (watched ? 'Log again' : 'Log, rate or review') + '</button>' +
+      '<button class="btn ' + (fav ? 'on' : 'btn-ghost') + ' btn-block btn-sm" data-act="fav" data-id="' + id + '">' +
+      (fav ? 'Favourite ✓' : 'Add to favourites') + '</button>' +
+      (watched ? '<p style="text-align:center;color:var(--good);font-size:13px;margin:2px 0 0">You’ve watched this.</p>' : '') +
+      '</div>';
+
+    if (mine.length) {
+      html += '<div style="margin-top:14px"><div class="label" style="color:var(--mute);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Your entries</div>';
+      mine.forEach(function (l) {
+        html += '<div class="entry"><div class="top"><span class="date">' + fmtDate(l.date) +
+          (l.rewatch ? ' · rewatch' : '') + '</span><span style="display:flex;gap:8px;align-items:center">' +
+          (l.rating ? starsStatic(l.rating, true) : '') + (l.liked ? '<span class="heart">♥</span>' : '') + '</span></div>' +
+          (l.review ? '<div class="rv">' + esc(l.review) + '</div>' : '') +
+          '<div class="acts"><button data-act="edit" data-log="' + l.id + '" data-id="' + id + '">Edit</button>' +
+          '<button data-act="del" data-log="' + l.id + '">Delete</button></div></div>';
+      });
+      html += '</div>';
+    }
+    html += '</aside></div></div></div>';
+    app.innerHTML = html;
+
+    // Wire the panel rating widget (quick-rate on click)
+    var ps = document.getElementById("panelStars");
+    var pv = r;
+    var setter = function (v) { pv = v; ps.querySelector(".fill").style.width = (v * 10) + "%"; ps.setAttribute("aria-valuenow", v / 2); if (v) quickRate(id, v); };
+    setter.get = function () { return pv; };
+    buildHit(ps, setter);
+  }
+
+  function viewDiary() {
+    var logs = state.logs.slice().sort(function (a, b) {
+      var da = a.date || "", db = b.date || "";
+      if (da !== db) return da < db ? 1 : -1;
+      return b.createdAt - a.createdAt;
+    });
+    var html = '<div class="view wrap"><div class="section-head" style="margin-top:28px"><div>' +
+      '<div class="eyebrow">' + state.logs.length + ' entries</div><h2>Diary</h2></div></div>';
+    if (!logs.length) {
+      html += '<div class="empty"><div class="ic">📔</div><p>Your diary is empty. Log a film to start keeping track.</p>' +
+        '<a class="btn btn-accent" href="#browse">Browse films</a></div>';
+    } else {
+      html += '<div class="diary">';
+      logs.forEach(function (l) {
+        var f = BY_ID[l.filmId];
+        var d = l.date ? l.date.split("-") : null;
+        var mon = d ? new Date(+d[0], +d[1] - 1, +d[2]).toLocaleDateString(undefined, { month: "short" }) : "";
+        html += '<div class="drow"><div class="dday">' +
+          (d ? '<b>' + (+d[2]) + '</b><span>' + mon + '</span>' : '<span>—</span>') + '</div>' +
+          '<a class="dp" href="#film-' + f.id + '"><div class="art" style="' + artStyle(f.id, false) + '"></div></a>' +
+          '<div style="min-width:0"><a href="#film-' + f.id + '" style="font-weight:550">' + esc(f.title) +
+          ' <span style="color:var(--mute);font-weight:400">' + f.year + '</span></a>' +
+          (l.review ? '<div style="color:var(--dim);font-size:13px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(l.review) + '</div>' : '') +
+          '</div><span style="display:flex;gap:8px;align-items:center">' +
+          (l.rating ? starsStatic(l.rating, true) : '') + (l.liked ? '<span class="heart">♥</span>' : '') + '</span></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    app.innerHTML = html;
+  }
+
+  function viewWatchlist() {
+    var html = '<div class="view wrap"><div class="section-head" style="margin-top:28px"><div>' +
+      '<div class="eyebrow">' + state.watchlist.length + ' films</div><h2>Watchlist</h2></div></div>';
+    if (!state.watchlist.length) {
+      html += '<div class="empty"><div class="ic">🍿</div><p>Nothing saved yet. Add films you want to watch.</p>' +
+        '<a class="btn btn-accent" href="#browse">Browse films</a></div>';
+    } else {
+      html += '<div class="grid">';
+      state.watchlist.forEach(function (id, i) { if (BY_ID[id]) html += posterCard(BY_ID[id], { i: i, seen: true }); });
+      html += '</div>';
+    }
+    html += '</div>';
+    app.innerHTML = html;
+  }
+
+  function viewProfile() {
+    var p = state.profile;
+    var initial = (p.name || "Y").trim().charAt(0).toUpperCase();
+    var thisYear = new Date().getFullYear();
+    var watchedIds = {}; state.logs.forEach(function (l) { watchedIds[l.filmId] = 1; });
+    var countWatched = Object.keys(watchedIds).length;
+    var countYear = {};
+    state.logs.forEach(function (l) { if (l.date && +l.date.slice(0, 4) === thisYear) countYear[l.filmId] = 1; });
+    var reviews = state.logs.filter(function (l) { return l.review; }).length;
+
+    // Ratings histogram (1..10 half-units -> 5 whole-star buckets for a clean chart)
+    var buckets = [0, 0, 0, 0, 0];
+    state.logs.forEach(function (l) { if (l.rating) buckets[Math.min(4, Math.ceil(l.rating / 2) - 1)]++; });
+    var maxB = Math.max.apply(null, buckets.concat([1]));
+
+    var html = '<div class="view wrap">' +
+      '<div class="pbanner"><div class="art" style="' + artStyle(state.favorites[0] || 6, true) + '"></div></div>' +
+      '<div class="bigavatar">' + esc(initial) + '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-top:12px">' +
+      '<div><h2 style="font-size:26px" id="pName">' + esc(p.name || "You") + '</h2>' +
+      (p.bio ? '<p style="color:var(--dim);margin-top:6px;max-width:48ch">' + esc(p.bio) + '</p>' : '<p style="color:var(--mute);margin-top:6px">Your private film diary.</p>') +
+      '</div><button class="btn btn-ghost btn-sm" data-act="editProfile">Edit profile</button></div>';
+
+    html += '<div class="statrow">' +
+      stat(countWatched, "Films") + stat(Object.keys(countYear).length, "This year") +
+      stat(reviews, "Reviews") + stat(state.watchlist.length, "Watchlist") + '</div>';
+
+    // Favourites
+    html += '<div class="section-head"><h3>Favourite films</h3></div>';
+    if (state.favorites.length) {
+      html += '<div class="grid tight">';
+      state.favorites.forEach(function (id, i) { if (BY_ID[id]) html += posterCard(BY_ID[id], { i: i }); });
+      html += '</div>';
+    } else {
+      html += '<div class="empty"><p>Pick up to 4 favourites from any film page.</p></div>';
+    }
+
+    // Ratings chart
+    if (state.logs.some(function (l) { return l.rating; })) {
+      html += '<div class="section-head"><h3>Ratings</h3></div><div class="histo">';
+      buckets.forEach(function (b) { html += '<div class="bar" style="height:' + (b / maxB * 100) + '%" title="' + b + '"></div>'; });
+      html += '</div><div class="histo-x"><span>★</span><span>★★</span><span>★★★</span><span>★★★★</span><span>★★★★★</span></div>';
+    }
+
+    html += '<div class="section-head"><h3>Recent activity</h3><a class="link-more" href="#diary">Diary →</a></div>';
+    var recent = state.logs.slice().sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(0, 10);
+    if (recent.length) {
+      html += '<div class="grid">';
+      recent.forEach(function (l, i) { html += posterCard(BY_ID[l.filmId], { i: i, under: "mine" }); });
+      html += '</div>';
+    } else {
+      html += '<div class="empty"><div class="ic">🎬</div><p>No films logged yet.</p>' +
+        '<a class="btn btn-accent" href="#browse">Find something to watch</a></div>';
+    }
+    html += '</div>';
+    app.innerHTML = html;
+  }
+  function stat(n, label) { return '<div class="stat"><b>' + n + '</b><span>' + label + '</span></div>'; }
+
+  function editProfile() {
+    var p = state.profile;
+    var html = '<div class="view wrap" style="max-width:640px"><div class="section-head" style="margin-top:28px"><h2>Edit profile</h2></div>' +
+      '<div class="field"><div class="label">Display name</div><input class="input" id="epName" maxlength="40" value="' + esc(p.name || "") + '"></div>' +
+      '<div class="field"><div class="label">Bio</div><textarea class="input" id="epBio" maxlength="300">' + esc(p.bio || "") + '</textarea></div>' +
+      '<div class="mrow" style="justify-content:flex-start;margin-top:18px"><button class="btn btn-accent" data-act="saveProfile">Save</button>' +
+      '<a class="btn btn-ghost" href="#profile">Cancel</a></div></div>';
+    app.innerHTML = html;
+  }
+
+  /* ---- Router ------------------------------------------------------------ */
+  var browseApply = null;
+  var current = { view: "home", id: null };
+
+  function parseHash() {
+    var h = (location.hash || "").replace(/^#/, "");
+    if (h.indexOf("film-") === 0) { var id = parseInt(h.slice(5), 10); return { view: "film", id: id }; }
+    if (["home", "browse", "diary", "watchlist", "profile"].indexOf(h) !== -1) return { view: h, id: null };
+    return { view: "home", id: null };
+  }
+
+  function render() {
+    current = parseHash();
+    // nav active state
+    [].forEach.call(document.querySelectorAll("#navlinks a"), function (a) {
+      a.classList.toggle("active", a.dataset.nav === current.view);
+    });
+    document.getElementById("navavatar").textContent = (state.profile.name || "Y").trim().charAt(0).toUpperCase();
+    if (current.view !== "browse") browseApply = null;
+
+    if (current.view === "home") viewHome();
+    else if (current.view === "browse") viewBrowse(document.getElementById("navq").value);
+    else if (current.view === "film") viewFilm(current.id);
+    else if (current.view === "diary") viewDiary();
+    else if (current.view === "watchlist") viewWatchlist();
+    else if (current.view === "profile") viewProfile();
+    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  }
+  function rerender() {
+    // re-render current view in place (after an action) without scroll jump
+    var y = window.scrollY;
+    if (current.view === "home") viewHome();
+    else if (current.view === "browse") { viewBrowse(document.getElementById("navq").value); }
+    else if (current.view === "film") viewFilm(current.id);
+    else if (current.view === "diary") viewDiary();
+    else if (current.view === "watchlist") viewWatchlist();
+    else if (current.view === "profile") viewProfile();
+    window.scrollTo({ top: y });
+    document.getElementById("navavatar").textContent = (state.profile.name || "Y").trim().charAt(0).toUpperCase();
+  }
+
+  window.addEventListener("hashchange", render);
+
+  /* ---- Global click + input handling (event delegation) ------------------ */
+  document.addEventListener("click", function (ev) {
+    var t = ev.target.closest("[data-act]");
+    if (!t) return;
+    var act = t.dataset.act, id = +t.dataset.id;
+    if (act === "wl") toggleWatchlist(id);
+    else if (act === "fav") toggleFav(id);
+    else if (act === "log") openLog(id, null);
+    else if (act === "edit") {
+      var lg = null; state.logs.forEach(function (l) { if (l.id === t.dataset.log) lg = l; });
+      if (lg) openLog(id, lg);
+    }
+    else if (act === "del") deleteLog(t.dataset.log);
+    else if (act === "editProfile") editProfile();
+    else if (act === "saveProfile") {
+      state.profile.name = (document.getElementById("epName").value || "You").trim() || "You";
+      state.profile.bio = document.getElementById("epBio").value.trim();
+      save(); toast("Profile saved"); location.hash = "#profile"; if (current.view === "profile") rerender();
+    }
+  });
+
+  document.getElementById("navavatar").addEventListener("click", function () { location.hash = "#profile"; });
+
+  // Nav search: go to browse and filter live
+  var navq = document.getElementById("navq");
+  navq.addEventListener("input", function () {
+    if (current.view !== "browse") { location.hash = "#browse"; }
+    else if (browseApply) browseApply();
+  });
+  document.getElementById("navsearch").addEventListener("submit", function (e) { e.preventDefault(); if (location.hash !== "#browse") location.hash = "#browse"; });
+
+  /* ---- Boot -------------------------------------------------------------- */
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
