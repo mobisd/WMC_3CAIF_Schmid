@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import film_poster, poster_card, stars_display, section_label, ratings_histogram %}
+{# Hoisted to template scope so both `content` and `scripts` blocks can read it. #}
+{% set is_own = current_user.is_authenticated and current_user.id == user.id %}
+{% block title %}{{ user.name }} (@{{ user.username }}) — ReelLog{% endblock %}
+
+{% block content %}
+  {% set active = 'activity' %}
+  {% include "partials/profile_header.html" %}
+
+  <div class="mx-auto mt-10 max-w-shell">
+    <div class="grid grid-cols-1 gap-x-10 gap-y-12 lg:grid-cols-[1fr_300px] lg:items-start">
+      {# =============================== MAIN =========================== #}
+      <div class="space-y-12">
+        {# --- Favourite films ---------------------------------------- #}
+        <section>
+          {{ section_label("Favourite films") }}
+          {% if favorites %}
+            <div class="mt-3 grid grid-cols-4 gap-3" data-favorites>
+              {% for fav in favorites %}
+                <div class="relative">
+                  {{ film_poster(fav.film) }}
+                  {% if is_own %}
+                    <button type="button"
+                            class="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-bg/80 text-text-dim ring-1 ring-white/10 hover:text-like"
+                            data-action="remove-favorite" data-tmdb-id="{{ fav.film_id }}"
+                            aria-label="Remove {{ fav.film.title }} from favourites">×</button>
+                  {% endif %}
+                </div>
+              {% endfor %}
+              {% if is_own %}
+                {% for _ in range(max_favorites - favorites|length) %}
+                  <a href="{{ url_for('films.search') }}"
+                     class="flex aspect-[2/3] items-center justify-center rounded-lg border border-dashed border-border text-2xl text-text-mute hover:border-accent/60 hover:text-accent"
+                     aria-label="Add a favourite film">+</a>
+                {% endfor %}
+              {% endif %}
+            </div>
+          {% elif is_own %}
+            <div class="mt-3 grid grid-cols-4 gap-3">
+              {% for _ in range(max_favorites) %}
+                <a href="{{ url_for('films.search') }}"
+                   class="flex aspect-[2/3] items-center justify-center rounded-lg border border-dashed border-border text-2xl text-text-mute hover:border-accent/60 hover:text-accent"
+                   aria-label="Add a favourite film">+</a>
+              {% endfor %}
+            </div>
+            <p class="mt-2 text-xs text-text-mute">Pick up to {{ max_favorites }} favourites from any film page.</p>
+          {% else %}
+            <p class="mt-3 text-sm text-text-mute">No favourite films chosen yet.</p>
+          {% endif %}
+        </section>
+
+        {# --- Recent activity ---------------------------------------- #}
+        <section>
+          {{ section_label("Recent activity", url_for('users.films', username=user.username)) }}
+          {% if recent_logs %}
+            <div class="poster-grid mt-3">
+              {% for log in recent_logs %}
+                {{ film_poster(log.film, log.rating, log.liked) }}
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="mt-3 text-sm text-text-mute">No films logged yet.</p>
+          {% endif %}
+        </section>
+
+        {# --- Recent reviews ----------------------------------------- #}
+        <section id="reviews">
+          {{ section_label("Recent reviews") }}
+          {% if reviews %}
+            <ul class="mt-3">
+              {% for r in reviews %}
+                <li class="flex gap-4 border-b border-line py-4">
+                  <a href="{{ url_for('films.film', tmdb_id=r.film.tmdb_id) }}" class="poster w-10 shrink-0">
+                    <img src="{{ r.film.poster_url('w185') }}" alt="{{ r.film.title }} poster" loading="lazy" />
+                  </a>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                      <a href="{{ url_for('films.film', tmdb_id=r.film.tmdb_id) }}" class="font-medium hover:text-accent">
+                        {{ r.film.title }}{% if r.film.release_year %} <span class="text-text-mute">{{ r.film.release_year }}</span>{% endif %}
+                      </a>
+                      <span class="flex items-center gap-2 text-xs">
+                        {{ stars_display(r.rating) }}
+                        {% if r.liked %}<span class="text-like">♥</span>{% endif %}
+                        {% if r.watched_on %}<span class="text-text-mute">{{ r.watched_on.strftime('%d %b %Y') }}</span>{% endif %}
+                      </span>
+                    </div>
+                    {% if r.contains_spoilers %}
+                      <details class="mt-1 text-sm text-text-dim">
+                        <summary class="cursor-pointer text-text-mute">Contains spoilers</summary>
+                        <p class="mt-1 whitespace-pre-line">{{ r.review }}</p>
+                      </details>
+                    {% else %}
+                      <p class="mt-1 line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-text-dim">{{ r.review }}</p>
+                    {% endif %}
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="mt-3 text-sm text-text-mute">No reviews yet.</p>
+          {% endif %}
+        </section>
+      </div>
+
+      {# ============================= SIDEBAR ========================== #}
+      <aside class="space-y-10">
+        {# --- Watchlist preview -------------------------------------- #}
+        <section>
+          {{ section_label("Watchlist", url_for('users.watchlist', username=user.username)) }}
+          {% if watchlist_preview %}
+            <div class="mt-3 grid grid-cols-5 gap-2 lg:grid-cols-3">
+              {% for item in watchlist_preview %}{{ film_poster(item.film) }}{% endfor %}
+            </div>
+          {% else %}
+            <p class="mt-3 text-sm text-text-mute">Nothing on the watchlist.</p>
+          {% endif %}
+        </section>
+
+        {# --- Diary preview ------------------------------------------ #}
+        <section>
+          {{ section_label("Diary", url_for('users.diary', username=user.username)) }}
+          {% if diary_preview %}
+            <ul class="mt-3 space-y-2">
+              {% for log in diary_preview %}
+                <li class="flex items-center gap-3 text-sm">
+                  <span class="flex w-10 shrink-0 flex-col items-center rounded bg-surface-2 py-1 leading-none text-text-mute">
+                    <span class="text-xs font-semibold text-text-dim">{{ log.watched_on.strftime('%d') }}</span>
+                    <span class="text-[10px] uppercase">{{ log.watched_on.strftime('%b') }}</span>
+                  </span>
+                  <a href="{{ url_for('films.film', tmdb_id=log.film.tmdb_id) }}" class="min-w-0 flex-1 truncate hover:text-accent">{{ log.film.title }}</a>
+                  {{ stars_display(log.rating) }}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="mt-3 text-sm text-text-mute">No diary entries yet.</p>
+          {% endif %}
+        </section>
+
+        {# --- Ratings histogram -------------------------------------- #}
+        <section>
+          {{ section_label("Ratings") }}
+          {% if histogram|sum %}
+            <div class="mt-3">
+              {{ ratings_histogram(histogram) }}
+              <div class="mt-1 flex justify-between text-xs text-text-mute">
+                <span>½</span><span>★★★★★</span>
+              </div>
+            </div>
+          {% else %}
+            <p class="mt-3 text-sm text-text-mute">No ratings yet.</p>
+          {% endif %}
+        </section>
+      </aside>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {% if is_own %}
+    <script type="module" src="{{ url_for('static', filename='js/profile.js') }}"></script>
+  {% endif %}
+{% endblock %}

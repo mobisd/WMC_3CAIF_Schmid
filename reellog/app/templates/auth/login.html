@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Log in — ReelLog{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-md">
+    <h1 class="mb-6 font-title text-3xl font-bold">Welcome back</h1>
+    <form method="post" action="{{ url_for('auth.login') }}" class="card space-y-4 p-6">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <div>
+        <label class="label" for="identifier">Username or email</label>
+        <input class="input" id="identifier" name="identifier" value="{{ identifier|default('') }}" required autocomplete="username" />
+      </div>
+
+      <div>
+        <label class="label" for="password">Password</label>
+        <input class="input" id="password" name="password" type="password" required autocomplete="current-password" />
+      </div>
+
+      <label class="flex items-center gap-2 text-sm text-text-dim">
+        <input type="checkbox" name="remember" class="accent-accent" /> Remember me
+      </label>
+
+      <button type="submit" class="btn-primary w-full">Log in</button>
+    </form>
+    <p class="mt-4 text-center text-sm text-text-dim">
+      New here?
+      <a href="{{ url_for('auth.register') }}" class="text-accent hover:underline">Create an account</a>
+    </p>
+  </div>
+{% endblock %}

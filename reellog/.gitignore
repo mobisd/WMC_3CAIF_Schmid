@@ -1,0 +1,27 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# SQLite database (instance folder)
+instance/
+*.db
+
+# Tailwind standalone binary (download per README)
+tailwindcss
+tailwindcss-*
+
+# OS / editor cruft
+.DS_Store
+.idea/
+.vscode/
+
+# Built CSS is committed so a fresh clone runs without the Tailwind CLI.
+# (If you prefer to gitignore it, uncomment the next line and build on deploy.)
+# app/static/css/output.css

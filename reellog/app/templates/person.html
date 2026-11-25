@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import poster_card, section_label, empty_state %}
+
+{% set dept = person.known_for_department %}
+{% if dept == "Directing" %}
+  {% set lead = "Films directed by" %}
+{% elif dept == "Acting" %}
+  {% set lead = "Films starring" %}
+{% else %}
+  {% set lead = "Films with" %}
+{% endif %}
+
+{% block title %}{{ person.name }} — ReelLog{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-[1100px]">
+    <header class="mb-8">
+      <p class="text-xs font-semibold uppercase tracking-widest text-text-mute">{{ lead }}</p>
+      <h1 class="mt-1 font-title text-3xl font-bold sm:text-4xl">{{ person.name }}</h1>
+    </header>
+
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+      {# --- Filmography ------------------------------------------------- #}
+      <div>
+        {{ section_label("Filmography") }}
+        {% if filmography %}
+          <div class="poster-grid mt-3">
+            {% for item in filmography %}{{ poster_card(item) }}{% endfor %}
+          </div>
+        {% else %}
+          {{ empty_state("No films to show right now. Try again shortly.", "🎬") }}
+        {% endif %}
+      </div>
+
+      {# --- Sidebar: photo, bio, TMDB link, watched stat ---------------- #}
+      <aside class="space-y-5">
+        <img
+          src="{{ person.profile_url('w300') }}"
+          alt="{{ person.name }}"
+          class="aspect-[2/3] w-full rounded-lg object-cover ring-1 ring-white/10"
+        />
+
+        {% if current_user.is_authenticated and total %}
+          <div class="card p-4">
+            <p class="text-sm text-text-dim">
+              You've watched
+              <span class="font-semibold text-text">{{ watched_count }}</span>
+              of <span class="font-semibold text-text">{{ total }}</span>
+              <span class="text-text-mute">({{ ((watched_count / total) * 100)|round|int }}%)</span>
+            </p>
+          </div>
+        {% endif %}
+
+        {% if person.biography %}
+          <div>
+            {{ section_label("Biography") }}
+            <details class="group mt-2">
+              <summary class="cursor-pointer list-none">
+                <p class="line-clamp-6 whitespace-pre-line text-sm leading-relaxed text-text-dim group-open:line-clamp-none">{{ person.biography }}</p>
+                <span class="mt-1 inline-block text-xs uppercase tracking-wider text-text-mute hover:text-accent group-open:hidden">Read more →</span>
+              </summary>
+            </details>
+          </div>
+        {% endif %}
+
+        <a
+          href="https://www.themoviedb.org/person/{{ person.tmdb_id }}"
+          class="inline-block text-sm text-text-dim hover:text-accent"
+          rel="noopener"
+          target="_blank"
+        >More details at TMDB →</a>
+      </aside>
+    </div>
+  </div>
+{% endblock %}
